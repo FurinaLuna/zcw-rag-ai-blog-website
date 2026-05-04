@@ -23,7 +23,17 @@
             </div>
           </header>
 
-          <div ref="contentRef" class="prose" v-html="renderedContent" />
+          <!-- Mobile TOC -->
+          <details class="mb-6 rounded-lg border border-border-default lg:hidden">
+            <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-text-secondary">
+              目录
+            </summary>
+            <div class="border-t border-border-default px-4 pb-3 pt-2">
+              <ArticleToc />
+            </div>
+          </details>
+
+          <div class="prose" v-html="renderedContent" />
 
           <div class="mt-12 border-t border-border-default pt-6">
             <NuxtLink :to="`/ask?q=关于《${article.title}》的更多信息`" class="text-sm text-accent hover:underline">

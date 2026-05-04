@@ -17,10 +17,11 @@ async def get_current_admin(
     token = credentials.credentials
     try:
         payload = decode_access_token(token)
-        admin_id: int = int(payload.get("sub"))
-        if admin_id is None:
+        sub = payload.get("sub")
+        if sub is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    except ValueError:
+        admin_id = int(sub)
+    except (ValueError, TypeError):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
 
     result = await db.execute(select(Admin).where(Admin.id == admin_id))

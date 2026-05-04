@@ -49,6 +49,8 @@
 <script setup lang="ts">
 definePageMeta({ layout: "admin", middleware: "auth", ssr: false });
 
+import dayjs from "dayjs";
+
 const api = useApi();
 const logs = ref<any[]>([]);
 const loading = ref(true);

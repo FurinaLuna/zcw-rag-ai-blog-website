@@ -162,7 +162,7 @@ async function save() {
   errorMsg.value = false;
   try {
     if (isNew.value) {
-      const res = await api.post("/admin/articles", form);
+      const res = await api.post<any>("/admin/articles", form);
       if (res.success) {
         message.value = "创建成功";
         navigateTo(`/admin/articles/${res.data.id}`);

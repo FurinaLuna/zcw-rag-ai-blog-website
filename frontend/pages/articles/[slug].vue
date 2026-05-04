@@ -36,7 +36,9 @@
 </template>
 
 <script setup lang="ts">
+import type MarkdownIt from "markdown-it";
 import markdownit from "markdown-it";
+import dayjs from "dayjs";
 import "highlight.js/styles/github-dark.css";
 
 const route = useRoute();
@@ -46,19 +48,26 @@ const api = useApi();
 const article = ref<any>(null);
 const loading = ref(true);
 
-const md = markdownit({
-  html: true,
-  linkify: true,
-  highlight: (str: string, lang: string) => {
-    try {
-      const hljs = require("highlight.js");
-      if (lang && hljs.getLanguage(lang)) {
-        return `<pre><code class="hljs ${lang}">${hljs.highlight(str, { language: lang }).value}</code></pre>`;
-      }
-    } catch {}
-    return `<pre><code>${md.utils.escapeHtml(str)}</code></pre>`;
-  },
-});
+let md: MarkdownIt;
+
+function createMarkdown(): MarkdownIt {
+  const instance = markdownit({
+    html: true,
+    linkify: true,
+    highlight(str: string, lang: string): string {
+      try {
+        const hljs = require("highlight.js");
+        if (lang && hljs.getLanguage(lang)) {
+          return `<pre><code class="hljs ${lang}">${hljs.highlight(str, { language: lang }).value}</code></pre>`;
+        }
+      } catch {}
+      return `<pre><code>${instance.utils.escapeHtml(str)}</code></pre>`;
+    },
+  });
+  return instance;
+}
+
+md = createMarkdown();
 
 const renderedContent = computed(() => {
   if (!article.value?.content_md) return "";

@@ -9,33 +9,35 @@ export function useApi() {
     onRequest({ options }) {
       const token = authStore.token;
       if (token) {
-        options.headers = {
-          ...options.headers,
-          Authorization: `Bearer ${token}`,
-        };
+        options.headers = new Headers(options.headers);
+        options.headers.set("Authorization", `Bearer ${token}`);
       }
     },
     onResponseError({ response }) {
       if (response.status === 401) {
         authStore.logout();
-        if (!window.location.pathname.startsWith("/admin/login")) {
+        if (import.meta.client && !window.location.pathname.startsWith("/admin/login")) {
           window.location.href = "/admin/login";
         }
       }
     },
   });
 
+  function req<T>(url: string, opts: { method: "GET" | "POST" | "PUT" | "DELETE"; params?: Record<string, unknown>; body?: Record<string, unknown> }) {
+    return fetcher<T>(url, opts) as Promise<T>;
+  }
+
   return {
     get: <T>(url: string, params?: Record<string, unknown>) =>
-      fetcher<T>(url, { method: "GET", params }),
+      req<T>(url, { method: "GET", params }),
 
-    post: <T>(url: string, body?: unknown) =>
-      fetcher<T>(url, { method: "POST", body }),
+    post: <T>(url: string, body?: Record<string, unknown>) =>
+      req<T>(url, { method: "POST", body }),
 
-    put: <T>(url: string, body?: unknown) =>
-      fetcher<T>(url, { method: "PUT", body }),
+    put: <T>(url: string, body?: Record<string, unknown>) =>
+      req<T>(url, { method: "PUT", body }),
 
     delete: <T>(url: string) =>
-      fetcher<T>(url, { method: "DELETE" }),
+      req<T>(url, { method: "DELETE" }),
   };
 }

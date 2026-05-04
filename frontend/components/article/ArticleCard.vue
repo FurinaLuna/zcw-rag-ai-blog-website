@@ -20,6 +20,8 @@
 </template>
 
 <script setup lang="ts">
+import dayjs from "dayjs";
+
 const props = defineProps<{
   article: {
     id: number;

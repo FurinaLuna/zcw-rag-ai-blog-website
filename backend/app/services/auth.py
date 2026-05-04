@@ -14,7 +14,7 @@ async def authenticate_admin(db: AsyncSession, username: str, password: str) -> 
         return None
 
     await db.execute(
-        update(Admin).where(Admin.id == admin.id).values(last_login_at=datetime.utcnow())
+        update(Admin).where(Admin.id == admin.id).values(last_login_at=datetime.now(tz=datetime.timezone.utc))
     )
     await db.flush()
 

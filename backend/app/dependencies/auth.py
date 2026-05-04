@@ -17,7 +17,7 @@ async def get_current_admin(
     token = credentials.credentials
     try:
         payload = decode_access_token(token)
-        admin_id: int = payload.get("sub")
+        admin_id: int = int(payload.get("sub"))
         if admin_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     except ValueError:

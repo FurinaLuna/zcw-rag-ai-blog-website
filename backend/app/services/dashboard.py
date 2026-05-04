@@ -45,7 +45,7 @@ async def get_home_data(db: AsyncSession) -> dict:
 
 
 async def get_today_overview(db: AsyncSession) -> dict:
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = datetime.now(tz=datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
     pv = await db.scalar(
         select(func.count(MonitorLog.id)).where(
@@ -86,7 +86,7 @@ async def get_today_overview(db: AsyncSession) -> dict:
 
 
 async def get_trends(db: AsyncSession, days: int = 7) -> list[dict]:
-    start_date = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days - 1)
+    start_date = datetime.now(tz=datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=days - 1)
 
     result = await db.execute(
         select(

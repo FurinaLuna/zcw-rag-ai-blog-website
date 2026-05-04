@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime as dt
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,7 @@ async def authenticate_admin(db: AsyncSession, username: str, password: str) -> 
         return None
 
     await db.execute(
-        update(Admin).where(Admin.id == admin.id).values(last_login_at=datetime.now(tz=datetime.timezone.utc))
+        update(Admin).where(Admin.id == admin.id).values(last_login_at=dt.datetime.now(tz=dt.timezone.utc))
     )
     await db.flush()
 

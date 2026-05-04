@@ -10,6 +10,16 @@
     </div>
 
     <div class="mb-8">
+      <h2 class="mb-4 text-lg font-semibold text-text-primary">访问趋势 (近7天)</h2>
+      <ClientOnly>
+        <TrendChart v-if="trends.length > 0" :data="trends" />
+        <div v-else class="flex h-[320px] items-center justify-center rounded-lg border border-border-default text-sm text-text-tertiary">
+          暂无趋势数据
+        </div>
+      </ClientOnly>
+    </div>
+
+    <div class="mb-8">
       <h2 class="mb-4 text-lg font-semibold text-text-primary">热门文章</h2>
       <div v-if="popular.length === 0" class="py-8 text-center text-sm text-text-tertiary">
         暂无数据
@@ -57,15 +67,18 @@ const api = useApi();
 const overview = ref({ pv: 0, uv: 0, rag_questions: 0, error_count: 0 });
 const popular = ref<any[]>([]);
 const knowledge = ref<any>(null);
+const trends = ref<any[]>([]);
 
 try {
-  const [overRes, popRes, knowRes] = await Promise.all([
+  const [overRes, popRes, knowRes, trendRes] = await Promise.all([
     api.get<any>("/admin/dashboard/overview"),
     api.get<any>("/admin/dashboard/popular-articles", { limit: 10 }),
     api.get<any>("/admin/knowledge/status"),
+    api.get<any>("/admin/dashboard/trends", { days: 7 }),
   ]);
   if (overRes.success) overview.value = overRes.data;
   if (popRes.success) popular.value = popRes.data;
   if (knowRes.success) knowledge.value = knowRes.data;
+  if (trendRes.success) trends.value = trendRes.data;
 } catch {}
 </script>

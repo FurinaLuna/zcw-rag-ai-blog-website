@@ -2,8 +2,35 @@
   <div>
     <h1 class="mb-8 text-2xl font-bold text-text-primary">监控大盘</h1>
 
-    <div class="mb-6">
-      <label class="mb-1 block text-sm font-medium text-text-primary">事件类型</label>
+    <div class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      <div class="rounded-lg border border-border-default bg-bg-surface p-4">
+        <div class="text-xs text-text-tertiary">总事件</div>
+        <div class="mt-1 text-xl font-semibold text-text-primary">{{ totalEvents }}</div>
+      </div>
+      <div class="rounded-lg border border-border-default bg-bg-surface p-4">
+        <div class="text-xs text-text-tertiary">PV</div>
+        <div class="mt-1 text-xl font-semibold text-accent">{{ stats.pv }}</div>
+      </div>
+      <div class="rounded-lg border border-border-default bg-bg-surface p-4">
+        <div class="text-xs text-text-tertiary">Web Vitals</div>
+        <div class="mt-1 text-xl font-semibold text-green-600">{{ stats.web_vital }}</div>
+      </div>
+      <div class="rounded-lg border border-border-default bg-bg-surface p-4">
+        <div class="text-xs text-text-tertiary">JS 错误</div>
+        <div class="mt-1 text-xl font-semibold text-red-500">{{ stats.error }}</div>
+      </div>
+      <div class="rounded-lg border border-border-default bg-bg-surface p-4">
+        <div class="text-xs text-text-tertiary">API 错误</div>
+        <div class="mt-1 text-xl font-semibold text-red-500">{{ stats.api_error }}</div>
+      </div>
+      <div class="rounded-lg border border-border-default bg-bg-surface p-4">
+        <div class="text-xs text-text-tertiary">曝光</div>
+        <div class="mt-1 text-xl font-semibold text-text-secondary">{{ stats.exposure }}</div>
+      </div>
+    </div>
+
+    <div class="mb-6 flex items-center gap-3">
+      <label class="text-sm font-medium text-text-primary">事件类型</label>
       <select v-model="eventType" class="rounded-md border border-border-default px-3 py-1.5 text-sm" @change="fetchLogs">
         <option value="">全部</option>
         <option value="pv">PV</option>
@@ -53,17 +80,32 @@ import dayjs from "dayjs";
 
 const api = useApi();
 const logs = ref<any[]>([]);
+const allLogs = ref<any[]>([]);
 const loading = ref(true);
 const eventType = ref("");
+
+const totalEvents = computed(() => allLogs.value.length);
+const stats = computed(() => {
+  const s = { pv: 0, web_vital: 0, error: 0, api_error: 0, resource_error: 0, exposure: 0 };
+  for (const log of allLogs.value) {
+    const t = log.event_type as keyof typeof s;
+    if (t in s) s[t]++;
+  }
+  return s;
+});
 
 async function fetchLogs() {
   loading.value = true;
   try {
-    const res = await api.get<any>("/monitor/stats", {
-      event_type: eventType.value || undefined,
-      page_size: 50,
-    });
-    if (res.success) logs.value = res.data.items;
+    const [filteredRes, allRes] = await Promise.all([
+      api.get<any>("/monitor/stats", {
+        event_type: eventType.value || undefined,
+        page_size: 50,
+      }),
+      api.get<any>("/monitor/stats", { page_size: 200 }),
+    ]);
+    if (filteredRes.success) logs.value = filteredRes.data.items;
+    if (allRes.success) allLogs.value = allRes.data.items;
   } catch {} finally {
     loading.value = false;
   }

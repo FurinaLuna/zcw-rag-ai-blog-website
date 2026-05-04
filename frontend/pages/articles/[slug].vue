@@ -1,38 +1,51 @@
 <template>
-  <div class="mx-auto max-w-content px-4 py-12">
-    <div v-if="loading" class="animate-pulse">
-      <div class="mb-4 h-8 w-2/3 rounded bg-gray-200" />
-      <div class="mb-2 h-4 w-1/3 rounded bg-gray-100" />
-      <div class="mt-8 space-y-2">
-        <div v-for="i in 10" :key="i" class="h-4 rounded bg-gray-100" :style="{ width: `${100 - i * 5}%` }" />
-      </div>
-    </div>
+  <div>
+    <ArticleProgress />
 
-    <article v-else-if="article">
-      <header class="mb-8">
-        <h1 class="mb-3 text-3xl font-bold text-text-primary">{{ article.title }}</h1>
-        <div class="flex flex-wrap items-center gap-3 text-sm text-text-tertiary">
-          <span v-if="article.category" class="rounded bg-gray-100 px-2 py-0.5">{{ article.category.name }}</span>
-          <span>{{ article.reading_time }} 分钟阅读</span>
-          <span>{{ article.view_count }} 次浏览</span>
-          <span v-if="article.published_at">{{ formatDate(article.published_at) }}</span>
+    <div class="mx-auto max-w-home px-4 py-12">
+      <div v-if="loading" class="animate-pulse">
+        <div class="mb-4 h-8 w-2/3 rounded bg-gray-200" />
+        <div class="mb-2 h-4 w-1/3 rounded bg-gray-100" />
+        <div class="mt-8 space-y-2">
+          <div v-for="i in 10" :key="i" class="h-4 rounded bg-gray-100" :style="{ width: `${100 - i * 5}%` }" />
         </div>
-      </header>
-
-      <div class="prose" v-html="renderedContent" />
-
-      <div class="mt-12 border-t border-border-default pt-6">
-        <NuxtLink :to="`/ask?q=关于《${article.title}》的更多信息`" class="text-sm text-accent hover:underline">
-          基于本文向 AI 提问 →
-        </NuxtLink>
       </div>
 
-      <CommentSection :article-slug="slug" />
-    </article>
+      <article v-else-if="article" class="lg:grid lg:grid-cols-[1fr_220px] lg:gap-10">
+        <div class="min-w-0">
+          <header class="mb-8">
+            <h1 class="mb-3 text-3xl font-bold text-text-primary">{{ article.title }}</h1>
+            <div class="flex flex-wrap items-center gap-3 text-sm text-text-tertiary">
+              <span v-if="article.category" class="rounded bg-gray-100 px-2 py-0.5">{{ article.category.name }}</span>
+              <span>{{ article.reading_time }} 分钟阅读</span>
+              <span>{{ article.view_count }} 次浏览</span>
+              <span v-if="article.published_at">{{ formatDate(article.published_at) }}</span>
+            </div>
+          </header>
 
-    <div v-else class="py-24 text-center">
-      <h2 class="mb-4 text-xl font-semibold text-text-primary">文章不存在</h2>
-      <NuxtLink to="/articles" class="text-accent hover:underline">返回文章列表</NuxtLink>
+          <div ref="contentRef" class="prose" v-html="renderedContent" />
+
+          <div class="mt-12 border-t border-border-default pt-6">
+            <NuxtLink :to="`/ask?q=关于《${article.title}》的更多信息`" class="text-sm text-accent hover:underline">
+              基于本文向 AI 提问 →
+            </NuxtLink>
+          </div>
+
+          <RelatedArticles :articles="relatedArticles" />
+          <CommentSection :article-slug="slug" />
+        </div>
+
+        <aside class="hidden lg:block">
+          <div class="sticky top-20">
+            <ArticleToc />
+          </div>
+        </aside>
+      </article>
+
+      <div v-else class="py-24 text-center">
+        <h2 class="mb-4 text-xl font-semibold text-text-primary">文章不存在</h2>
+        <NuxtLink to="/articles" class="text-accent hover:underline">返回文章列表</NuxtLink>
+      </div>
     </div>
   </div>
 </template>
@@ -49,6 +62,8 @@ const slug = route.params.slug as string;
 const api = useApi();
 const article = ref<any>(null);
 const loading = ref(true);
+const relatedArticles = ref<any[]>([]);
+const contentRef = ref<HTMLElement | null>(null);
 
 let md: MarkdownIt;
 
@@ -60,10 +75,10 @@ function createMarkdown(): MarkdownIt {
       try {
         const hljs = require("highlight.js");
         if (lang && hljs.getLanguage(lang)) {
-          return `<pre><code class="hljs ${lang}">${hljs.highlight(str, { language: lang }).value}</code></pre>`;
+          return `<pre class="group relative"><code class="hljs ${lang}">${hljs.highlight(str, { language: lang }).value}</code><button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent);this.textContent='已复制';setTimeout(()=>this.textContent='复制',2000)" aria-label="复制代码">复制</button></pre>`;
         }
       } catch {}
-      return `<pre><code>${instance.utils.escapeHtml(str)}</code></pre>`;
+      return `<pre class="group relative"><code>${instance.utils.escapeHtml(str)}</code><button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent);this.textContent='已复制';setTimeout(()=>this.textContent='复制',2000)" aria-label="复制代码">复制</button></pre>`;
     },
   });
   return instance;
@@ -87,6 +102,18 @@ try {
       title: article.value.seo_title || article.value.title,
       description: article.value.seo_description || article.value.summary,
     });
+
+    // Fetch related articles (same category)
+    if (article.value.category) {
+      api.get<any>("/public/articles", {
+        category_slug: article.value.category.slug,
+        page_size: 4,
+      }).then((r: any) => {
+        if (r.success) {
+          relatedArticles.value = r.data.items.filter((a: any) => a.slug !== slug).slice(0, 3);
+        }
+      }).catch(() => {});
+    }
   }
 } catch {
   article.value = null;
@@ -98,3 +125,26 @@ function formatDate(date: string) {
   return dayjs(date).format("YYYY-MM-DD");
 }
 </script>
+
+<style scoped>
+:deep(.copy-btn) {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #374151;
+  color: #d1d5db;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+:deep(pre:hover .copy-btn) {
+  opacity: 1;
+}
+:deep(.copy-btn:hover) {
+  background: #4b5563;
+}
+</style>

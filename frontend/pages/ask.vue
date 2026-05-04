@@ -72,12 +72,15 @@ definePageMeta({ ssr: false });
 
 const route = useRoute();
 const api = useApi();
+const config = useRuntimeConfig();
+const authStore = useAuthStore();
 
 const question = ref((route.query.q as string) || "");
 const sending = ref(false);
 const error = ref("");
 const messages = ref<{ role: string; content: string; sources?: any[] }[]>([]);
 const suggestions = ref<string[]>([]);
+const streamingFailed = ref(false);
 
 try {
   const res = await api.get<any>("/rag/suggestions");
@@ -92,6 +95,92 @@ async function send() {
   sending.value = true;
   error.value = "";
 
+  // Try SSE streaming first, fall back to non-streaming
+  if (!streamingFailed.value) {
+    const streamed = await tryStream(q);
+    if (streamed) {
+      sending.value = false;
+      return;
+    }
+  }
+
+  await nonStreamAsk(q);
+  sending.value = false;
+}
+
+async function tryStream(q: string): Promise<boolean> {
+  try {
+    const token = authStore.token;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const response = await fetch(`${config.public.apiBase}/rag/ask/stream`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ question: q }),
+    });
+
+    if (!response.ok || !response.body) {
+      streamingFailed.value = true;
+      return false;
+    }
+
+    // Push empty assistant message that will be filled by the stream
+    const assistantMsg = { role: "assistant" as const, content: "", sources: [] as any[] };
+    messages.value.push(assistantMsg);
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // Process complete SSE events (delimited by \n\n)
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop() || "";
+
+      for (const part of parts) {
+        if (!part.startsWith("data: ")) continue;
+        const payload = part.slice(6); // remove "data: " prefix
+
+        if (payload === "[DONE]") {
+          return true;
+        }
+        if (payload === "[ERROR]") {
+          error.value = "流式传输中断，已显示部分内容";
+          return true;
+        }
+
+        // Try JSON (sources array)
+        if (payload.startsWith("[") || payload.startsWith("{")) {
+          try {
+            const parsed = JSON.parse(payload);
+            if (Array.isArray(parsed)) {
+              assistantMsg.sources = parsed;
+            }
+          } catch {
+            // Not valid JSON, treat as a plain token
+            assistantMsg.content += payload;
+          }
+        } else {
+          // Plain text token (character)
+          assistantMsg.content += payload;
+        }
+      }
+    }
+
+    return true;
+  } catch {
+    streamingFailed.value = true;
+    return false;
+  }
+}
+
+async function nonStreamAsk(q: string) {
   try {
     const res = await api.post<any>("/rag/ask", { question: q });
     if (res.success) {
@@ -103,8 +192,6 @@ async function send() {
     }
   } catch {
     error.value = "请求失败，请稍后再试";
-  } finally {
-    sending.value = false;
   }
 }
 

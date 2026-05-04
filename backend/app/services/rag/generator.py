@@ -1,3 +1,6 @@
+import asyncio
+from typing import AsyncIterator
+
 import httpx
 from loguru import logger
 
@@ -72,3 +75,19 @@ def _generate_simple_answer(question: str, chunks: list[dict]) -> str:
 
     lines.append("如需查看完整内容，请点击来源文章链接。")
     return "\n".join(lines)
+
+
+async def generate_answer_stream(
+    question: str,
+    chunks: list[dict],
+) -> AsyncIterator[str]:
+    """Async generator that streams answer characters one at a time.
+
+    Uses the same logic as generate_answer() to produce the full answer,
+    then yields it character by character with a small delay to simulate
+    token-by-token streaming.
+    """
+    answer = await generate_answer(question, chunks)
+    for char in answer:
+        yield char
+        await asyncio.sleep(0.01)

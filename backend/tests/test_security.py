@@ -112,3 +112,83 @@ def test_token_custom_claims():
     assert payload["sub"] == "100"
     assert payload["username"] == "admin"
     assert payload["role"] == "admin"
+
+
+# ── Token expiry edge cases ────────────────────────────────────────────
+
+def test_token_already_expired():
+    """过期 token 应抛出 ValueError"""
+    from datetime import timedelta
+
+    token = create_access_token(
+        data={"sub": 1}, expires_delta=timedelta(seconds=-1)
+    )
+    with pytest.raises(ValueError, match="Invalid or expired token"):
+        decode_access_token(token)
+
+
+def test_token_very_short_expiry():
+    """极短过期时间的 token 在有效期内应能解码"""
+    from datetime import timedelta
+
+    token = create_access_token(
+        data={"sub": 99}, expires_delta=timedelta(seconds=5)
+    )
+    payload = decode_access_token(token)
+    assert payload["sub"] == "99"
+    assert "exp" in payload
+
+
+def test_token_large_expiry():
+    """超大过期时间 token 应正常生成"""
+    from datetime import timedelta
+
+    token = create_access_token(
+        data={"sub": 1}, expires_delta=timedelta(days=365)
+    )
+    payload = decode_access_token(token)
+    assert payload["sub"] == "1"
+    assert "exp" in payload
+
+
+def test_token_with_empty_data():
+    """空 data 生成的 token 应可解码且含 exp"""
+    token = create_access_token(data={})
+    payload = decode_access_token(token)
+    assert "exp" in payload
+
+
+def test_token_decode_twice():
+    """同一 token 解码两次结果一致"""
+    token = create_access_token(data={"sub": 42, "scope": "test"})
+    payload1 = decode_access_token(token)
+    payload2 = decode_access_token(token)
+    assert payload1 == payload2
+
+
+# ── Password edge cases ────────────────────────────────────────────────
+
+def test_hash_very_long_password():
+    """较长密码哈希 (bcrypt 上限 72 字节, 使用 70 字符)"""
+    password = "a" * 70
+    hashed = hash_password(password)
+    assert len(hashed) > 0
+    assert verify_password(password, hashed) is True
+
+
+def test_hash_unicode_password():
+    """含 Unicode 的密码"""
+    password = "密码🔑中文测试"
+    hashed = hash_password(password)
+    assert verify_password(password, hashed) is True
+    assert verify_password("wrong", hashed) is False
+
+
+def test_verify_against_different_hash():
+    """用不同用户的哈希验证密码"""
+    hash1 = hash_password("pass1")
+    hash2 = hash_password("pass2")
+    assert verify_password("pass1", hash1) is True
+    assert verify_password("pass1", hash2) is False
+    assert verify_password("pass2", hash2) is True
+    assert verify_password("pass2", hash1) is False

@@ -1,5 +1,5 @@
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -122,7 +122,7 @@ async def update_article(db: AsyncSession, article_id: int, data: dict) -> Artic
 
     for key, value in update_data.items():
         setattr(article, key, value)
-    article.updated_at = datetime.now(tz=datetime.timezone.utc)
+    article.updated_at = datetime.now(tz=timezone.utc)
 
     if tag_ids is not None:
         await db.execute(delete(ArticleTag).where(ArticleTag.article_id == article_id))
@@ -139,7 +139,7 @@ async def publish_article(db: AsyncSession, article_id: int) -> Article | None:
     if article is None:
         return None
     article.status = "published"
-    article.published_at = article.published_at or datetime.now(tz=datetime.timezone.utc)
+    article.published_at = article.published_at or datetime.now(tz=timezone.utc)
     article.vector_status = "pending"
     await db.flush()
     return article

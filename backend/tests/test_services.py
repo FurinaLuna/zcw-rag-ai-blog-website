@@ -116,6 +116,146 @@ class TestCommentService:
         assert mock_comment.likes == 6  # incremented
 
 
+class TestArticleStatusTransitions:
+    """测试文章状态流转: draft → published → archived"""
+
+    @pytest.mark.asyncio
+    async def test_publish_draft_article(self):
+        """草稿发布: 状态变为 published, 设置 published_at 和 vector_status"""
+        from app.services.article import publish_article
+
+        db = AsyncMock()
+        mock_article = MagicMock()
+        mock_article.id = 1
+        mock_article.status = "draft"
+        mock_article.published_at = None
+        mock_article.vector_status = "completed"
+
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.unique = MagicMock(return_value=exec_result)
+        exec_result.scalar_one_or_none = MagicMock(return_value=mock_article)
+        db.execute.return_value = exec_result
+        db.flush = AsyncMock()
+
+        result = await publish_article(db, 1)
+        assert result is not None
+        assert mock_article.status == "published"
+        assert mock_article.vector_status == "pending"
+        assert mock_article.published_at is not None
+
+    @pytest.mark.asyncio
+    async def test_publish_article_not_found(self):
+        """发布不存在的文章返回 None"""
+        from app.services.article import publish_article
+
+        db = AsyncMock()
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.unique = MagicMock(return_value=exec_result)
+        exec_result.scalar_one_or_none = MagicMock(return_value=None)
+        db.execute.return_value = exec_result
+
+        result = await publish_article(db, 999)
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_archive_published_article(self):
+        """归档已发布文章: 状态变为 archived"""
+        from app.services.article import archive_article
+
+        db = AsyncMock()
+        mock_article = MagicMock()
+        mock_article.id = 2
+        mock_article.status = "published"
+
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.unique = MagicMock(return_value=exec_result)
+        exec_result.scalar_one_or_none = MagicMock(return_value=mock_article)
+        db.execute.return_value = exec_result
+        db.flush = AsyncMock()
+
+        result = await archive_article(db, 2)
+        assert result is not None
+        assert mock_article.status == "archived"
+
+    @pytest.mark.asyncio
+    async def test_archive_article_not_found(self):
+        """归档不存在的文章返回 None"""
+        from app.services.article import archive_article
+
+        db = AsyncMock()
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.unique = MagicMock(return_value=exec_result)
+        exec_result.scalar_one_or_none = MagicMock(return_value=None)
+        db.execute.return_value = exec_result
+
+        result = await archive_article(db, 999)
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_publish_already_published_article(self):
+        """对已发布文章再次发布: 保持原 published_at 不变"""
+        from datetime import datetime, timezone
+        from app.services.article import publish_article
+
+        db = AsyncMock()
+        original_published_at = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        mock_article = MagicMock()
+        mock_article.id = 3
+        mock_article.status = "published"
+        mock_article.published_at = original_published_at
+        mock_article.vector_status = "completed"
+
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.unique = MagicMock(return_value=exec_result)
+        exec_result.scalar_one_or_none = MagicMock(return_value=mock_article)
+        db.execute.return_value = exec_result
+        db.flush = AsyncMock()
+
+        result = await publish_article(db, 3)
+        assert result is not None
+        assert mock_article.status == "published"
+        assert mock_article.published_at == original_published_at
+        assert mock_article.vector_status == "pending"
+
+    @pytest.mark.asyncio
+    async def test_archive_then_publish_article(self):
+        """归档后再发布: 状态从 archived 变为 published"""
+        from datetime import datetime, timezone
+        from app.services.article import publish_article, archive_article
+
+        db = AsyncMock()
+        original_published_at = datetime(2025, 3, 15, tzinfo=timezone.utc)
+        mock_article = MagicMock()
+        mock_article.id = 4
+        mock_article.status = "published"
+        mock_article.published_at = original_published_at
+        mock_article.vector_status = "completed"
+
+        # First archive
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.unique = MagicMock(return_value=exec_result)
+        exec_result.scalar_one_or_none = MagicMock(return_value=mock_article)
+        db.execute.return_value = exec_result
+        db.flush = AsyncMock()
+
+        await archive_article(db, 4)
+        assert mock_article.status == "archived"
+
+        # Then re-publish
+        mock_article.status = "archived"  # reset to test
+        result = await publish_article(db, 4)
+        assert result is not None
+        assert mock_article.status == "published"
+        assert mock_article.published_at == original_published_at
+        assert mock_article.vector_status == "pending"
+
+
 class TestAuthService:
     """测试 auth service"""
 

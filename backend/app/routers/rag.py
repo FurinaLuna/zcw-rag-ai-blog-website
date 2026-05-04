@@ -1,10 +1,13 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
 from app.schemas.rag import AskRequest, AskResponse, SourceInfo
 from app.services.rag.embedder import get_embedder
-from app.services.rag.generator import generate_answer
+from app.services.rag.generator import generate_answer, generate_answer_stream
 from app.services.rag.retriever import retrieve_similar_chunks
 
 router = APIRouter()
@@ -48,6 +51,54 @@ async def ask_question(data: AskRequest, db: AsyncSession = Depends(get_db)):
         "data": AskResponse(answer=answer, sources=sources, question=data.question).model_dump(),
         "message": "ok",
     }
+
+
+@router.post("/ask/stream")
+async def ask_question_stream(data: AskRequest, db: AsyncSession = Depends(get_db)):
+    if not data.question.strip():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Question cannot be empty")
+
+    embedder = get_embedder()
+    query_embedding = embedder.encode_single(data.question)
+
+    if query_embedding is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Embedding service unavailable")
+
+    chunks = await retrieve_similar_chunks(db, query_embedding, top_k=5, threshold=0.4)
+
+    sources_payload = [
+        SourceInfo(
+            article_id=c["article_id"],
+            article_title=c["article_title"],
+            article_slug=c["article_slug"],
+            chunk_content=c["content"][:200],
+            similarity=c["similarity"],
+        )
+        for c in chunks
+    ]
+
+    async def event_stream():
+        try:
+            async for token in generate_answer_stream(data.question, chunks):
+                yield f"data: {token}\n\n"
+
+            sources_json = json.dumps(
+                [s.model_dump() for s in sources_payload], ensure_ascii=False
+            )
+            yield f"data: {sources_json}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception:
+            yield "data: [ERROR]\n\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.get("/suggestions")

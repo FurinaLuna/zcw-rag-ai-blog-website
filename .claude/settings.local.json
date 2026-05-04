@@ -5,7 +5,9 @@
       "Bash(git commit -m ' *)",
       "Bash(curl -s http://localhost:3000/)",
       "Bash(python -m pytest tests/test_services.py -v --tb=short)",
-      "mcp__playwright__browser_resize"
+      "mcp__playwright__browser_resize",
+      "Bash(python -m pytest tests/test_services.py::TestArticleStatusTransitions::test_publish_already_published_article tests/test_services.py::TestArticleStatusTransitions::test_archive_then_publish_article -v --tb=short)",
+      "Bash(python -m pytest tests/test_services.py::TestArticleStatusTransitions::test_publish_draft_article -v --tb=short)"
     ]
   }
 }

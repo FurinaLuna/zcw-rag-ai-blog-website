@@ -18,4 +18,4 @@ class Comment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     article = relationship("Article", back_populates="comments")
-    replies = relationship("Comment", backref="parent", remote_side="Comment.id", cascade="all, delete-orphan")
+    replies = relationship("Comment", backref="parent", remote_side="Comment.id", cascade="all, delete-orphan", single_parent=True)

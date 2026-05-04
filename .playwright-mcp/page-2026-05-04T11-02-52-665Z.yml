@@ -1,8 +1,0 @@
-- generic [ref=e3]:
-  - link "跳转到主要内容" [ref=e4] [cursor=pointer]:
-    - /url: "#main-content"
-  - main [ref=e5]:
-    - generic [ref=e6]:
-      - heading "知识专题" [level=1] [ref=e7]
-      - paragraph [ref=e8]: 系统化知识体系，深度探索技术主题
-      - generic [ref=e9]: 暂无专题

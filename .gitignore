@@ -10,4 +10,5 @@ dist/
 .env
 logs/
 *.log
+.playwright-mcp/
 .DS_Store

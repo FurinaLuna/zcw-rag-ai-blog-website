@@ -63,7 +63,6 @@ const api = useApi();
 const article = ref<any>(null);
 const loading = ref(true);
 const relatedArticles = ref<any[]>([]);
-const contentRef = ref<HTMLElement | null>(null);
 
 let md: MarkdownIt;
 
@@ -101,6 +100,25 @@ try {
     useSeoMeta({
       title: article.value.seo_title || article.value.title,
       description: article.value.seo_description || article.value.summary,
+    });
+
+    // JSON-LD structured data
+    useHead({
+      script: [
+        {
+          type: "application/ld+json",
+          innerHTML: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: article.value.title,
+            description: article.value.summary || "",
+            datePublished: article.value.published_at,
+            dateModified: article.value.updated_at,
+            author: { "@type": "Organization", name: "智能内容平台" },
+            publisher: { "@type": "Organization", name: "智能内容平台" },
+          }),
+        } as any,
+      ],
     });
 
     // Fetch related articles (same category)

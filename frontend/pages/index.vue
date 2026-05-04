@@ -128,4 +128,24 @@ useSeoMeta({
   title: "智能内容平台 - 技术内容沉淀与智能检索",
   description: "基于 Nuxt3 混合渲染与 PgVector 向量检索的智能内容服务平台。",
 });
+
+useHead({
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "智能内容平台",
+        description: "基于 Nuxt3 混合渲染与 PgVector 向量检索的智能内容服务平台",
+        url: "http://localhost:3000",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: "http://localhost:3000/search?q={search_term_string}",
+          "query-input": "required name=search_term_string",
+        },
+      }),
+    } as any,
+  ],
+});
 </script>

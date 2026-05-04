@@ -1,0 +1,50 @@
+<template>
+  <div class="mx-auto max-w-home px-4 py-12">
+    <div v-if="topic">
+      <h1 class="mb-2 text-2xl font-bold text-text-primary">{{ topic.name }}</h1>
+      <p class="mb-8 text-sm text-text-secondary">{{ topic.description }}</p>
+    </div>
+
+    <div v-if="loading" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div v-for="i in 3" :key="i" class="animate-pulse rounded-lg border border-border-default p-5">
+        <div class="mb-3 h-5 w-3/4 rounded bg-gray-200" />
+        <div class="mb-2 h-4 w-full rounded bg-gray-100" />
+      </div>
+    </div>
+
+    <div v-else-if="articles.length === 0" class="py-24 text-center text-text-tertiary">
+      该专题下暂无文章
+    </div>
+
+    <div v-else class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <ArticleCard v-for="article in articles" :key="article.id" :article="article" />
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+const route = useRoute();
+const slug = route.params.slug as string;
+const api = useApi();
+
+const topic = ref<any>(null);
+const articles = ref<any[]>([]);
+const loading = ref(true);
+
+try {
+  const [topicRes, artRes] = await Promise.all([
+    api.get<any>(`/public/topics/${slug}`),
+    api.get<any>("/public/articles", { topic_slug: slug, page_size: 20 }),
+  ]);
+  if (topicRes.success) topic.value = topicRes.data;
+  if (artRes.success) articles.value = artRes.data.items;
+} catch {
+} finally {
+  loading.value = false;
+}
+
+useSeoMeta({
+  title: topic.value ? `${topic.value.name} - 智能内容平台` : "专题详情",
+  description: topic.value?.description || "",
+});
+</script>

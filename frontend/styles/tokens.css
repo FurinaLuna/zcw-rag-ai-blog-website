@@ -1,0 +1,27 @@
+:root {
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-focus: 0 0 0 3px rgba(15, 118, 110, 0.18);
+  --shadow-popover: 0 12px 30px rgba(31, 41, 51, 0.12);
+
+  /* Component sizes */
+  --btn-h-sm: 32px;
+  --btn-h-md: 40px;
+  --btn-h-lg: 48px;
+  --input-h: 40px;
+  --search-h: 44px;
+}

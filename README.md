@@ -1,3 +1,4 @@
+
 # 智能内容平台
 
 基于 **Nuxt3 混合渲染 + PgVector 向量检索** 的智能内容服务平台，融合内容分发、RAG 智能问答、前端监控与运营管理能力。
@@ -157,6 +158,31 @@ ORM 模型：[backend/app/models/](backend/app/models/) | 迁移脚本：[backen
 - [后端开发规范](docs/backend/后端开发规范-V1.0.md)
 - [前端设计规范](docs/frontend/前端设计规范-V1.0.md)
 - [前端组件规范](docs/frontend/前端组件规范-V1.0.md)
+
+## 测试
+
+| 测试集 | 数量 | 框架 |
+|--------|------|------|
+| 后端纯函数 (RAG/Security) | 41 | pytest |
+| 后端 Service 层 | 14 | pytest + mock |
+| 后端 API 集成 | 11 | pytest + httpx |
+| 前端单元测试 | 15 | Vitest |
+| 前端 E2E | 9 | Playwright |
+| **总计** | **90** | |
+
+```bash
+cd backend && pytest tests/ -q   # 66 tests
+cd frontend && npx vitest run    # 15 tests
+cd frontend && npx nuxt typecheck # 0 errors
+```
+
+## 前端组件 (18)
+
+**通用组件**: Skeleton · BaseButton · FormField · Pagination · DataTable · MetricCard · StatusBadge · BackToTop
+
+**业务组件**: ArticleCard · ArticleProgress · ArticleToc · CopyCodeButton · RelatedArticles · CommentSection · CommentForm · TrendChart · RAGFloatingButton
+
+**布局组件**: SiteHeader · SiteFooter · AdminSidebar · AdminTopbar
 
 ## License
 

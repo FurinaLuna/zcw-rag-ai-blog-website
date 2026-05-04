@@ -7,102 +7,61 @@
     </div>
 
     <form class="max-w-3xl" @submit.prevent="save">
-      <div class="mb-4">
-        <label class="mb-1.5 block text-sm font-medium text-text-primary" for="title">标题 *</label>
-        <input
-          id="title"
-          v-model="form.title"
-          type="text"
+      <FormField id="title" label="标题" required class="mb-4">
+        <input id="title" v-model="form.title" type="text" required
           class="w-full rounded-md border border-border-default px-3 py-2 text-sm outline-none focus:border-accent"
-          style="height: 40px"
-          required
-        />
-      </div>
+          style="height: 40px" />
+      </FormField>
 
-      <div class="mb-4">
-        <label class="mb-1.5 block text-sm font-medium text-text-primary" for="slug">Slug *</label>
-        <input
-          id="slug"
-          v-model="form.slug"
-          type="text"
+      <FormField id="slug" label="Slug" required class="mb-4">
+        <input id="slug" v-model="form.slug" type="text" required
           class="w-full rounded-md border border-border-default px-3 py-2 text-sm font-mono outline-none focus:border-accent"
-          style="height: 40px"
-          required
-        />
-      </div>
+          style="height: 40px" />
+      </FormField>
 
-      <div class="mb-4">
-        <label class="mb-1.5 block text-sm font-medium text-text-primary" for="category">分类</label>
-        <select id="category" v-model="form.category_id" class="w-full rounded-md border border-border-default px-3 py-2 text-sm" style="height: 40px">
+      <FormField id="category" label="分类" class="mb-4">
+        <select id="category" v-model="form.category_id"
+          class="w-full rounded-md border border-border-default px-3 py-2 text-sm" style="height: 40px">
           <option :value="null">无分类</option>
           <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
         </select>
-      </div>
+      </FormField>
 
-      <div class="mb-4">
-        <label class="mb-1.5 block text-sm font-medium text-text-primary" for="summary">摘要</label>
-        <textarea
-          id="summary"
-          v-model="form.summary"
-          class="w-full rounded-md border border-border-default px-3 py-2 text-sm outline-none focus:border-accent"
-          rows="2"
-          maxlength="160"
-        />
-        <span class="mt-1 text-xs text-text-tertiary">{{ (form.summary || "").length }}/160</span>
-      </div>
+      <FormField id="summary" label="摘要" :helper="`${(form.summary || '').length}/160`" class="mb-4">
+        <textarea id="summary" v-model="form.summary" rows="2" maxlength="160"
+          class="w-full rounded-md border border-border-default px-3 py-2 text-sm outline-none focus:border-accent" />
+      </FormField>
 
-      <div class="mb-4">
-        <label class="mb-1.5 block text-sm font-medium text-text-primary" for="content">正文 (Markdown)</label>
-        <textarea
-          id="content"
-          v-model="form.content_md"
+      <FormField id="content" label="正文 (Markdown)" class="mb-4">
+        <textarea id="content" v-model="form.content_md" placeholder="输入 Markdown 内容..."
           class="w-full rounded-md border border-border-default px-3 py-2 font-mono text-sm outline-none focus:border-accent"
-          style="min-height: 520px"
-          placeholder="输入 Markdown 内容..."
-        />
-      </div>
+          style="min-height: 520px" />
+      </FormField>
 
-      <div class="mb-4">
-        <label class="mb-1.5 block text-sm font-medium text-text-primary" for="seo_title">SEO 标题</label>
-        <input
-          id="seo_title"
-          v-model="form.seo_title"
-          type="text"
+      <FormField id="seo_title" label="SEO 标题" class="mb-4">
+        <input id="seo_title" v-model="form.seo_title" type="text" maxlength="60"
           class="w-full rounded-md border border-border-default px-3 py-2 text-sm outline-none focus:border-accent"
-          style="height: 40px"
-          maxlength="60"
-        />
-      </div>
+          style="height: 40px" />
+      </FormField>
 
-      <div class="mb-6">
-        <label class="mb-1.5 block text-sm font-medium text-text-primary" for="seo_desc">SEO 描述</label>
-        <textarea
-          id="seo_desc"
-          v-model="form.seo_description"
-          class="w-full rounded-md border border-border-default px-3 py-2 text-sm outline-none focus:border-accent"
-          rows="2"
-          maxlength="160"
-        />
-      </div>
+      <FormField id="seo_desc" label="SEO 描述" class="mb-6">
+        <textarea id="seo_desc" v-model="form.seo_description" rows="2" maxlength="160"
+          class="w-full rounded-md border border-border-default px-3 py-2 text-sm outline-none focus:border-accent" />
+      </FormField>
 
       <div class="flex gap-3">
-        <button
-          type="submit"
-          class="rounded-md bg-accent px-6 py-2 text-sm font-medium text-white disabled:opacity-50"
-          style="height: 40px"
-          :disabled="saving"
-        >
+        <BaseButton type="submit" variant="primary" size="md" :loading="saving">
           {{ saving ? "保存中..." : "保存草稿" }}
-        </button>
-        <button
+        </BaseButton>
+        <BaseButton
           v-if="!isNew && article?.status !== 'published'"
           type="button"
-          class="rounded-md border border-accent px-6 py-2 text-sm font-medium text-accent"
-          style="height: 40px"
+          variant="secondary"
+          size="md"
           @click="publish"
         >
           发布
-        </button>
+        </BaseButton>
       </div>
 
       <p v-if="message" class="mt-3 text-sm" :class="errorMsg ? 'text-red-500' : 'text-green-600'">{{ message }}</p>

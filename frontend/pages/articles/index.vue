@@ -29,17 +29,13 @@
       <ArticleCard v-for="article in articles" :key="article.id" :article="article" />
     </div>
 
-    <div v-if="totalPages > 1" class="mt-8 flex items-center justify-center gap-2">
-      <button
-        v-for="p in totalPages"
-        :key="p"
-        class="rounded-md border px-3 py-1 text-sm"
-        :class="p === page ? 'border-accent bg-accent text-white' : 'border-border-default text-text-secondary hover:border-accent'"
-        @click="goPage(p)"
-      >
-        {{ p }}
-      </button>
-    </div>
+    <Pagination
+      v-if="totalPages > 1"
+      class="mt-8"
+      :current="page"
+      :total-pages="totalPages"
+      @change="goPage"
+    />
   </div>
 </template>
 

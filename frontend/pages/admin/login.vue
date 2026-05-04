@@ -4,8 +4,7 @@
       <h1 class="mb-8 text-center text-xl font-bold text-text-primary">管理员登录</h1>
 
       <form class="rounded-lg border border-border-default bg-bg-surface p-6" @submit.prevent="handleLogin">
-        <div class="mb-4">
-          <label class="mb-1.5 block text-sm font-medium text-text-primary" for="username">账号</label>
+        <FormField id="username" label="账号" :error="error" class="mb-4">
           <input
             id="username"
             v-model="username"
@@ -15,9 +14,8 @@
             :disabled="loading"
             style="height: 40px"
           />
-        </div>
-        <div class="mb-6">
-          <label class="mb-1.5 block text-sm font-medium text-text-primary" for="password">密码</label>
+        </FormField>
+        <FormField id="password" label="密码" class="mb-4">
           <input
             id="password"
             v-model="password"
@@ -27,16 +25,10 @@
             :disabled="loading"
             style="height: 40px"
           />
-        </div>
-        <p v-if="error" class="mb-4 text-sm text-red-500">{{ error }}</p>
-        <button
-          type="submit"
-          class="w-full rounded-md bg-accent py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-          :disabled="!username || !password || loading"
-          style="height: 40px"
-        >
+        </FormField>
+        <BaseButton type="submit" variant="primary" size="md" block :loading="loading" :disabled="!username || !password || loading">
           {{ loading ? "登录中..." : "登录" }}
-        </button>
+        </BaseButton>
       </form>
     </div>
   </div>

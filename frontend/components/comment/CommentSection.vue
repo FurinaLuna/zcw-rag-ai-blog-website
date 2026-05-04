@@ -37,17 +37,12 @@
       </div>
     </div>
 
-    <div v-if="totalPages > 1" class="mt-4 flex justify-center gap-2">
-      <button
-        v-for="p in totalPages"
-        :key="p"
-        class="rounded px-2 py-1 text-xs"
-        :class="p === page ? 'bg-accent text-white' : 'text-text-tertiary hover:text-accent'"
-        @click="goPage(p)"
-      >
-        {{ p }}
-      </button>
-    </div>
+    <Pagination
+      v-if="totalPages > 1"
+      :current="page"
+      :total-pages="totalPages"
+      @change="goPage"
+    />
   </div>
 </template>
 

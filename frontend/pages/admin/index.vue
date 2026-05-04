@@ -48,6 +48,35 @@
       </div>
     </div>
 
+    <div class="mb-8">
+      <h2 class="mb-4 text-lg font-semibold text-text-primary">最近错误</h2>
+      <div v-if="recentErrors.length === 0" class="rounded-lg border border-border-default p-8 text-center text-sm text-text-tertiary">
+        暂无错误记录
+      </div>
+      <div v-else class="overflow-x-auto rounded-lg border border-border-default">
+        <table class="w-full text-sm">
+          <thead class="border-b border-border-default bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left font-medium text-text-secondary">类型</th>
+              <th class="px-4 py-2 text-left font-medium text-text-secondary">消息</th>
+              <th class="px-4 py-2 text-left font-medium text-text-secondary">时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="err in recentErrors" :key="err.id" class="border-b border-border-default">
+              <td class="px-4 py-2">
+                <span class="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">{{ err.event_type }}</span>
+              </td>
+              <td class="max-w-[400px] truncate px-4 py-2 text-text-secondary">
+                {{ err.event_data?.message || err.event_data?.error_type || '-' }}
+              </td>
+              <td class="px-4 py-2 text-text-tertiary">{{ formatTime(err.created_at) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div>
       <h2 class="mb-4 text-lg font-semibold text-text-primary">知识库状态</h2>
       <div v-if="knowledge" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -63,22 +92,34 @@
 <script setup lang="ts">
 definePageMeta({ layout: "admin", middleware: "auth", ssr: false });
 
+import dayjs from "dayjs";
+
 const api = useApi();
 const overview = ref({ pv: 0, uv: 0, rag_questions: 0, error_count: 0 });
 const popular = ref<any[]>([]);
 const knowledge = ref<any>(null);
 const trends = ref<any[]>([]);
+const recentErrors = ref<any[]>([]);
 
 try {
-  const [overRes, popRes, knowRes, trendRes] = await Promise.all([
+  const [overRes, popRes, knowRes, trendRes, errRes] = await Promise.all([
     api.get<any>("/admin/dashboard/overview"),
     api.get<any>("/admin/dashboard/popular-articles", { limit: 10 }),
     api.get<any>("/admin/knowledge/status"),
     api.get<any>("/admin/dashboard/trends", { days: 7 }),
+    api.get<any>("/monitor/stats", {
+      event_type: "error",
+      page_size: 10,
+    }),
   ]);
   if (overRes.success) overview.value = overRes.data;
   if (popRes.success) popular.value = popRes.data;
   if (knowRes.success) knowledge.value = knowRes.data;
   if (trendRes.success) trends.value = trendRes.data;
+  if (errRes.success) recentErrors.value = errRes.data.items;
 } catch {}
+
+function formatTime(d: string) {
+  return dayjs(d).format("MM-DD HH:mm");
+}
 </script>

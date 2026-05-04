@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(pip install *)",
+      "Bash(python -m pytest tests/test_rag_cleaner.py tests/test_rag_splitter.py tests/test_security.py -v)",
+      "Bash(python -m pytest tests/test_security.py::test_hash_password -v --tb=long)"
+    ]
+  }
+}

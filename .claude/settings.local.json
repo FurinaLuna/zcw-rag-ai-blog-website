@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(python -m pytest tests/test_services.py -v --tb=short)",
+      "mcp__playwright__browser_resize"
+    ]
+  }
+}

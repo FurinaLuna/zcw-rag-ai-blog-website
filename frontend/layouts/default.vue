@@ -7,5 +7,6 @@
     </main>
     <SiteFooter />
     <RAGFloatingButton />
+    <BackToTop />
   </div>
 </template>

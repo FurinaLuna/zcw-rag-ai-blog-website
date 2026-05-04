@@ -1,0 +1,32 @@
+- generic [ref=e3]:
+  - link "跳转到主要内容" [ref=e4] [cursor=pointer]:
+    - /url: "#main-content"
+  - main [ref=e5]:
+    - generic [ref=e6]:
+      - heading "关于本项目" [level=1] [ref=e7]
+      - generic [ref=e8]:
+        - paragraph [ref=e9]: 智能内容平台是一个基于现代 Web 技术栈构建的技术内容服务平台，融合了以下核心技术能力：
+        - heading "核心技术" [level=2] [ref=e10]
+        - list [ref=e11]:
+          - listitem [ref=e12]:
+            - strong [ref=e13]: Nuxt3 混合渲染
+            - text: ：SSG/SSR/CSR 混合渲染策略，兼顾首屏性能与 SEO
+          - listitem [ref=e14]:
+            - strong [ref=e15]: FastAPI 后端服务
+            - text: ：高性能异步 Python API 服务
+          - listitem [ref=e16]:
+            - strong [ref=e17]: PostgreSQL + pgvector
+            - text: ：统一存储业务数据与向量数据
+          - listitem [ref=e18]:
+            - strong [ref=e19]: RAG 智能问答
+            - text: ：基于站内私有知识库的检索增强生成
+          - listitem [ref=e20]:
+            - strong [ref=e21]: 前端监控 SDK
+            - text: ：自研性能与异常采集体系
+        - heading "技术栈" [level=2] [ref=e22]
+        - list [ref=e23]:
+          - listitem [ref=e24]: 前端：Nuxt3 + Vue3 + TypeScript + TailwindCSS + Pinia
+          - listitem [ref=e25]: 后端：FastAPI + SQLAlchemy + PgVector
+          - listitem [ref=e26]: 数据：PostgreSQL 16 + Redis
+          - listitem [ref=e27]: AI：BGE Embedding + LLM API
+          - listitem [ref=e28]: 部署：Docker + Docker Compose

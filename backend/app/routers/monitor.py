@@ -1,8 +1,10 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
-from app.schemas.monitor import MonitorBatchRequest, MonitorQuery
+from app.schemas.monitor import MonitorBatchRequest
 from app.services.monitor import query_monitor_logs, report_events
 from app.utils.response import success_response
 
@@ -21,14 +23,21 @@ async def report_monitor_events(data: MonitorBatchRequest, request: Request, db:
 async def get_monitor_stats(
     event_type: str | None = None,
     page_url: str | None = None,
+    start_time: str | None = Query(None, description="ISO date string, e.g. 2026-05-01"),
+    end_time: str | None = Query(None, description="ISO date string, e.g. 2026-05-04"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
 ):
+    st = datetime.fromisoformat(start_time).replace(tzinfo=timezone.utc) if start_time else None
+    et = datetime.fromisoformat(end_time).replace(tzinfo=timezone.utc) if end_time else None
+
     logs, total = await query_monitor_logs(
         db,
         event_type=event_type,
         page_url=page_url,
+        start_time=st,
+        end_time=et,
         page=page,
         page_size=page_size,
     )

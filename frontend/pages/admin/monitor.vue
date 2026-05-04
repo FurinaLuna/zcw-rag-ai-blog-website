@@ -29,8 +29,12 @@
       </div>
     </div>
 
-    <div class="mb-6 flex items-center gap-3">
-      <label class="text-sm font-medium text-text-primary">事件类型</label>
+    <div class="mb-6 flex flex-wrap items-center gap-3">
+      <label class="text-sm font-medium text-text-primary">时间范围</label>
+      <input type="date" v-model="dateStart" class="rounded-md border border-border-default px-3 py-1.5 text-sm" @change="fetchLogs" />
+      <span class="text-sm text-text-tertiary">至</span>
+      <input type="date" v-model="dateEnd" class="rounded-md border border-border-default px-3 py-1.5 text-sm" @change="fetchLogs" />
+      <label class="ml-3 text-sm font-medium text-text-primary">类型</label>
       <select v-model="eventType" class="rounded-md border border-border-default px-3 py-1.5 text-sm" @change="fetchLogs">
         <option value="">全部</option>
         <option value="pv">PV</option>
@@ -83,6 +87,8 @@ const logs = ref<any[]>([]);
 const allLogs = ref<any[]>([]);
 const loading = ref(true);
 const eventType = ref("");
+const dateStart = ref("");
+const dateEnd = ref("");
 
 const totalEvents = computed(() => allLogs.value.length);
 const stats = computed(() => {
@@ -97,12 +103,20 @@ const stats = computed(() => {
 async function fetchLogs() {
   loading.value = true;
   try {
+    const params: Record<string, any> = {
+      page_size: 50,
+    };
+    if (eventType.value) params.event_type = eventType.value;
+    if (dateStart.value) params.start_time = dateStart.value;
+    if (dateEnd.value) params.end_time = dateEnd.value + "T23:59:59";
+
+    const allParams: Record<string, any> = { page_size: 200 };
+    if (dateStart.value) allParams.start_time = dateStart.value;
+    if (dateEnd.value) allParams.end_time = dateEnd.value + "T23:59:59";
+
     const [filteredRes, allRes] = await Promise.all([
-      api.get<any>("/monitor/stats", {
-        event_type: eventType.value || undefined,
-        page_size: 50,
-      }),
-      api.get<any>("/monitor/stats", { page_size: 200 }),
+      api.get<any>("/monitor/stats", params),
+      api.get<any>("/monitor/stats", allParams),
     ]);
     if (filteredRes.success) logs.value = filteredRes.data.items;
     if (allRes.success) allLogs.value = allRes.data.items;

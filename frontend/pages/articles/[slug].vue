@@ -3,11 +3,11 @@
     <ArticleProgress />
 
     <div class="mx-auto max-w-home px-4 py-12">
-      <div v-if="loading" class="animate-pulse">
-        <div class="mb-4 h-8 w-2/3 rounded bg-gray-200" />
-        <div class="mb-2 h-4 w-1/3 rounded bg-gray-100" />
+      <div v-if="loading" class="space-y-4">
+        <Skeleton width="66%" height="2rem" />
+        <Skeleton width="33%" height="1rem" />
         <div class="mt-8 space-y-2">
-          <div v-for="i in 10" :key="i" class="h-4 rounded bg-gray-100" :style="{ width: `${100 - i * 5}%` }" />
+          <Skeleton v-for="i in 10" :key="i" variant="text" :lines="1" />
         </div>
       </div>
 

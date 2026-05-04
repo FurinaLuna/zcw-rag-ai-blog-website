@@ -16,10 +16,7 @@
     </form>
 
     <div v-if="loading">
-      <div v-for="i in 3" :key="i" class="mb-4 animate-pulse rounded-lg border border-border-default p-5">
-        <div class="mb-2 h-5 w-1/2 rounded bg-gray-200" />
-        <div class="h-4 w-3/4 rounded bg-gray-100" />
-      </div>
+      <Skeleton v-for="i in 3" :key="i" variant="card" />
     </div>
 
     <div v-else-if="searched && results.length === 0" class="py-24 text-center text-text-tertiary">

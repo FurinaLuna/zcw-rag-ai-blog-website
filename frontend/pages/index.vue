@@ -42,11 +42,7 @@
       <div class="mx-auto max-w-home px-4">
         <h2 class="mb-8 text-2xl font-bold text-text-primary">精选文章</h2>
         <div v-if="loading" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div v-for="i in 3" :key="i" class="animate-pulse rounded-lg border border-border-default p-5">
-            <div class="mb-3 h-5 w-3/4 rounded bg-gray-200" />
-            <div class="mb-2 h-4 w-full rounded bg-gray-100" />
-            <div class="h-4 w-2/3 rounded bg-gray-100" />
-          </div>
+          <Skeleton v-for="i in 3" :key="i" variant="card" />
         </div>
         <div v-else-if="articles.length === 0" class="py-16 text-center text-text-tertiary">
           暂无文章

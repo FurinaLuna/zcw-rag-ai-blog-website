@@ -26,6 +26,8 @@
           基于本文向 AI 提问 →
         </NuxtLink>
       </div>
+
+      <CommentSection :article-slug="slug" />
     </article>
 
     <div v-else class="py-24 text-center">

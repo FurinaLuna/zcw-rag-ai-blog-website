@@ -174,6 +174,24 @@ async def increment_view_count(db: AsyncSession, article_id: int) -> None:
     await db.flush()
 
 
+async def get_related_articles(db: AsyncSession, article_id: int, category_id: int | None, limit: int = 4) -> list[Article]:
+    if category_id is None:
+        return []
+    stmt = (
+        select(Article)
+        .options(joinedload(Article.category), selectinload(Article.tags))
+        .where(
+            Article.category_id == category_id,
+            Article.id != article_id,
+            Article.status == "published",
+        )
+        .order_by(Article.published_at.desc())
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    return list(result.unique().scalars().all())
+
+
 def calculate_reading_time(content_md: str | None) -> int:
     if not content_md:
         return 1

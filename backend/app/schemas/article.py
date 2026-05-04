@@ -66,6 +66,7 @@ class ArticleDetailResponse(BaseModel):
     published_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
+    related_articles: list["ArticleListResponse"] = []
 
     model_config = {"from_attributes": True}
 

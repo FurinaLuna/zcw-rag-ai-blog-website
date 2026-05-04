@@ -131,17 +131,7 @@ try {
       ],
     });
 
-    // Fetch related articles (same category)
-    if (article.value.category) {
-      api.get<any>("/public/articles", {
-        category_slug: article.value.category.slug,
-        page_size: 4,
-      }).then((r: any) => {
-        if (r.success) {
-          relatedArticles.value = r.data.items.filter((a: any) => a.slug !== slug).slice(0, 3);
-        }
-      }).catch(() => {});
-    }
+    relatedArticles.value = res.data.related_articles || [];
   }
 } catch {
   article.value = null;

@@ -11,6 +11,7 @@ from app.services.article import (
     check_slug_available,
     get_article_by_slug,
     get_articles,
+    get_related_articles,
     increment_view_count,
 )
 from app.services.category import get_categories_with_count, get_category_by_slug
@@ -121,6 +122,18 @@ async def article_detail(slug: str, request: Request, db: AsyncSession = Depends
     article = await get_article_by_slug(db, slug)
     if article is None or article.status != "published":
         raise HTTPException(status_code=404, detail="Article not found")
+
+    related = await get_related_articles(db, article.id, article.category_id, limit=4)
+    related_data = [
+        ArticleListResponse(
+            id=r.id, title=r.title, summary=r.summary, slug=r.slug,
+            cover_url=r.cover_url, category=r.category, tags=r.tags,
+            view_count=r.view_count, reading_time=calculate_reading_time(r.content_md),
+            published_at=r.published_at, created_at=r.created_at,
+        ).model_dump()
+        for r in related
+    ]
+
     return success_response(
         data=ArticleDetailResponse(
             id=article.id,
@@ -139,6 +152,7 @@ async def article_detail(slug: str, request: Request, db: AsyncSession = Depends
             published_at=article.published_at,
             created_at=article.created_at,
             updated_at=article.updated_at,
+            related_articles=related_data,
         ).model_dump()
     )
 

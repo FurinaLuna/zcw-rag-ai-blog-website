@@ -49,6 +49,24 @@
     </div>
 
     <div class="mb-8">
+      <h2 class="mb-4 text-lg font-semibold text-text-primary">Web Vitals 状态</h2>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div class="rounded-lg border border-border-default p-4">
+          <div class="text-xs text-text-tertiary">LCP</div>
+          <div class="mt-1 text-xl font-semibold" :class="vitalsClass(vitals.lcp)">{{ vitals.lcp || '--' }}ms</div>
+        </div>
+        <div class="rounded-lg border border-border-default p-4">
+          <div class="text-xs text-text-tertiary">CLS</div>
+          <div class="mt-1 text-xl font-semibold" :class="vitalsClass(vitals.cls)">{{ vitals.cls || '--' }}</div>
+        </div>
+        <div class="rounded-lg border border-border-default p-4">
+          <div class="text-xs text-text-tertiary">INP</div>
+          <div class="mt-1 text-xl font-semibold" :class="vitalsClass(vitals.inp)">{{ vitals.inp || '--' }}ms</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-8">
       <h2 class="mb-4 text-lg font-semibold text-text-primary">最近错误</h2>
       <div v-if="recentErrors.length === 0" class="rounded-lg border border-border-default p-8 text-center text-sm text-text-tertiary">
         暂无错误记录
@@ -100,24 +118,44 @@ const popular = ref<any[]>([]);
 const knowledge = ref<any>(null);
 const trends = ref<any[]>([]);
 const recentErrors = ref<any[]>([]);
+const vitals = ref({ lcp: 0, cls: 0, inp: 0 });
 
 try {
-  const [overRes, popRes, knowRes, trendRes, errRes] = await Promise.all([
+  const [overRes, popRes, knowRes, trendRes, errRes, vitalsRes] = await Promise.all([
     api.get<any>("/admin/dashboard/overview"),
     api.get<any>("/admin/dashboard/popular-articles", { limit: 10 }),
     api.get<any>("/admin/knowledge/status"),
     api.get<any>("/admin/dashboard/trends", { days: 7 }),
-    api.get<any>("/monitor/stats", {
-      event_type: "error",
-      page_size: 10,
-    }),
+    api.get<any>("/monitor/stats", { event_type: "error", page_size: 10 }),
+    api.get<any>("/monitor/stats", { event_type: "web_vital", page_size: 200 }),
   ]);
   if (overRes.success) overview.value = overRes.data;
   if (popRes.success) popular.value = popRes.data;
   if (knowRes.success) knowledge.value = knowRes.data;
   if (trendRes.success) trends.value = trendRes.data;
   if (errRes.success) recentErrors.value = errRes.data.items;
+  if (vitalsRes.success) {
+    const items = vitalsRes.data.items;
+    const metrics: Record<string, number[]> = {};
+    for (const item of items) {
+      const m = item.event_data?.metric;
+      const v = item.event_data?.value;
+      if (m && typeof v === "number") {
+        (metrics[m] ||= []).push(v);
+      }
+    }
+    vitals.value = {
+      lcp: metrics.LCP?.length ? Math.round(metrics.LCP.reduce((a, b) => a + b) / metrics.LCP.length) : 0,
+      cls: metrics.CLS?.length ? Math.round(metrics.CLS.reduce((a, b) => a + b) / metrics.CLS.length * 100) / 100 : 0,
+      inp: metrics.INP?.length ? Math.round(metrics.INP.reduce((a, b) => a + b) / metrics.INP.length) : 0,
+    };
+  }
 } catch {}
+
+function vitalsClass(val: number | string) {
+  if (val === 0 || val === "--") return "text-text-tertiary";
+  return +val > 2500 ? "text-red-500" : "text-green-600";
+}
 
 function formatTime(d: string) {
   return dayjs(d).format("MM-DD HH:mm");

@@ -242,6 +242,108 @@ def dispatch_tasks(max_concurrent: int = 4) -> list[dict]:
     return dispatched
 
 
+# ─── Git 操作 ─────────────────────────────────────────────
+
+
+def git_command(*args: str) -> tuple[int, str]:
+    import subprocess
+    result = subprocess.run(["git"] + list(args), capture_output=True, text=True)
+    return result.returncode, (result.stdout + result.stderr).strip()
+
+
+def git_branch_create(branch_name: str, base_branch: str = "main") -> bool:
+    code, output = git_command("checkout", base_branch)
+    if code != 0:
+        print(f"切换到 {base_branch} 失败: {output}")
+        return False
+    code, output = git_command("pull", "--ff-only")
+    if code != 0:
+        print(f"拉取最新代码失败: {output}")
+        return False
+    code, output = git_command("checkout", "-b", branch_name)
+    if code != 0:
+        print(f"创建分支 {branch_name} 失败: {output}")
+        return False
+    return True
+
+
+def git_stage(paths: list[str]) -> bool:
+    code, output = git_command("add", *paths)
+    if code != 0:
+        print(f"暂存失败: {output}")
+        return False
+    return True
+
+
+def git_commit(message: str) -> bool:
+    code, output = git_command("commit", "-m", message)
+    if code != 0:
+        print(f"提交失败: {output}")
+        return False
+    return True
+
+
+def git_push(branch_name: str) -> bool:
+    code, output = git_command("push", "-u", "origin", branch_name)
+    if code != 0:
+        print(f"推送失败: {output}")
+        return False
+    return True
+
+
+def check_merge_conditions(task_id: str) -> dict:
+    conditions = {
+        "no_lock_conflicts": True,
+        "unit_tests_passed": False,
+        "integration_tests_passed": False,
+        "docs_synced": False,
+        "security_review_passed": False,
+        "no_breaking_migration": True,
+        "no_public_api_breaking": True
+    }
+
+    locks_file = os.path.join(COORDINATION_DIR, "locks", "current.json")
+    if os.path.exists(locks_file):
+        locks = load_json(locks_file)
+        for lock in locks.get("locks", []):
+            if lock.get("status") == "ACTIVE" and lock.get("task_id") != task_id:
+                conditions["no_lock_conflicts"] = False
+                break
+
+    ctx = get_context()
+    qg = ctx.get("system_state", {}).get("quality_gates", {})
+    conditions["unit_tests_passed"] = qg.get("unit_tests") == "PASSED"
+    conditions["integration_tests_passed"] = qg.get("integration_tests") == "PASSED"
+    conditions["security_review_passed"] = qg.get("security_review") == "PASSED"
+
+    all_pass = all(conditions.values())
+    return {"conditions": conditions, "all_pass": all_pass}
+
+
+def format_branch_name(task: dict) -> str:
+    type_map = {"fe": "feat", "be": "feat", "ai": "feat", "db": "feat",
+                "qa": "chore", "ops": "chore", "doc": "chore",
+                "spec": "chore", "arch": "chore", "sec": "fix"}
+    owner = task.get("owner", "chore")
+    prefix = type_map.get(owner, "chore")
+    task_id = task.get("task_id", "task_unknown")
+    goal = task.get("goal", "update")[:30]
+    slug = goal.lower().replace(" ", "-").replace("_", "-")
+    slug = "".join(c for c in slug if c.isalnum() or c == "-")[:20]
+    return f"{prefix}/{owner}/{task_id}/{slug}"
+
+
+def format_commit_message(task: dict) -> str:
+    prefix_map = {"fe": "feat(frontend)", "be": "feat(backend)", "ai": "feat(rag)",
+                  "db": "feat(database)", "qa": "test", "ops": "chore(ops)",
+                  "doc": "docs", "spec": "chore(spec)", "arch": "chore(arch)",
+                  "sec": "fix(security)"}
+    scope = prefix_map.get(task.get("owner", ""), "chore")
+    task_id = task.get("task_id", "")
+    goal = task.get("goal", "")
+    return f"{scope}: {goal} ({task_id})"
+
+
 # ─── CLI 入口 ─────────────────────────────────────────────
 
 
@@ -297,6 +399,45 @@ def main():
     p_audit.add_argument("--event", required=True)
     p_audit.add_argument("--actor", required=True)
     p_audit.add_argument("--summary", required=True)
+
+    # quality gate
+    p_qg = sub.add_parser("quality-gate", help="设置质量门禁状态")
+    p_qg.add_argument("--gate", required=True,
+                      choices=["unit_tests", "integration_tests", "e2e_tests",
+                               "security_review", "lint_check"],
+                      help="门禁名称")
+    p_qg.add_argument("--status", required=True,
+                      choices=["PASSED", "FAILED", "UNKNOWN"],
+                      help="门禁状态")
+
+    # git branch
+    p_git_branch = sub.add_parser("git-branch", help="创建功能分支")
+    p_git_branch.add_argument("task_id", help="任务 ID")
+    p_git_branch.add_argument("--base", default="main", help="基于哪个分支创建")
+
+    # git commit
+    p_git_commit = sub.add_parser("git-commit", help="暂存并提交代码")
+    p_git_commit.add_argument("task_id", help="任务 ID")
+    p_git_commit.add_argument("--paths", "-p", nargs="+", required=True,
+                              help="要暂存的文件路径")
+    p_git_commit.add_argument("--message", "-m", help="自定义提交信息（可选）")
+
+    # git push
+    p_git_push = sub.add_parser("git-push", help="推送分支到远程")
+    p_git_push.add_argument("task_id", help="任务 ID")
+    p_git_push.add_argument("--branch", help="分支名（可选，默认从任务自动生成）")
+
+    # merge check
+    sub.add_parser("merge-check", help="检查合并条件是否满足")
+
+    # full workflow: branch → commit → push
+    p_workflow = sub.add_parser("workflow-finish", help="完成模块的完整提交流程")
+    p_workflow.add_argument("task_id", help="任务 ID")
+    p_workflow.add_argument("--paths", "-p", nargs="+", required=True,
+                            help="要提交的文件路径")
+    p_workflow.add_argument("--message", "-m", help="自定义提交信息")
+    p_workflow.add_argument("--base", default="main", help="基于哪个分支")
+    p_workflow.add_argument("--skip-push", action="store_true", help="跳过推送")
 
     args = parser.parse_args()
 
@@ -379,6 +520,133 @@ def main():
     elif args.command == "audit":
         append_audit(args.event, args.actor, args.summary)
         print("审计日志已添加")
+
+    elif args.command == "quality-gate":
+        ctx = get_context()
+        ctx["system_state"]["quality_gates"][args.gate] = args.status
+        save_json(CONTEXT_FILE, ctx)
+        append_audit("QUALITY_GATE_UPDATED", "scheduler",
+                     f"门禁 {args.gate} 已设为 {args.status}")
+        print(f"门禁 {args.gate} 已设为 {args.status}")
+
+    elif args.command == "git-branch":
+        task = None
+        for d in ["active", "queue", "done"]:
+            fpath = os.path.join(TASKS_DIR, d, f"{args.task_id}.json")
+            if os.path.exists(fpath):
+                task = load_json(fpath)
+                break
+        if not task:
+            print(f"任务 {args.task_id} 不存在")
+            return
+
+        branch = format_branch_name(task)
+        ok = git_branch_create(branch, args.base)
+        if ok:
+            ctx = get_context()
+            ctx["system_state"]["current_branch"] = branch
+            save_json(CONTEXT_FILE, ctx)
+            append_audit("BRANCH_CREATED", "scheduler",
+                         f"分支 {branch} 已创建 (基于 {args.base})")
+            print(f"分支已创建: {branch}")
+        else:
+            print("分支创建失败")
+
+    elif args.command == "git-commit":
+        task = None
+        for d in ["active", "done"]:
+            fpath = os.path.join(TASKS_DIR, d, f"{args.task_id}.json")
+            if os.path.exists(fpath):
+                task = load_json(fpath)
+                break
+        if not task:
+            print(f"任务 {args.task_id} 不存在或不在 active/done 中")
+            return
+
+        if not git_stage(args.paths):
+            return
+
+        message = args.message or format_commit_message(task)
+        if git_commit(message):
+            append_audit("COMMIT_CREATED", "scheduler",
+                         f"任务 {args.task_id} 已提交: {message}")
+            print(f"提交成功: {message}")
+        else:
+            print("提交失败")
+
+    elif args.command == "git-push":
+        task = None
+        for d in ["active", "done"]:
+            fpath = os.path.join(TASKS_DIR, d, f"{args.task_id}.json")
+            if os.path.exists(fpath):
+                task = load_json(fpath)
+                break
+        if not task:
+            print(f"任务 {args.task_id} 不存在或不在 active/done 中")
+            return
+
+        branch = args.branch or format_branch_name(task)
+        if git_push(branch):
+            ctx = get_context()
+            ctx["system_state"]["current_branch"] = branch
+            save_json(CONTEXT_FILE, ctx)
+            append_audit("BRANCH_PUSHED", "scheduler",
+                         f"分支 {branch} 已推送到远程")
+            print(f"推送成功: {branch}")
+        else:
+            print("推送失败")
+
+    elif args.command == "merge-check":
+        result = check_merge_conditions("")
+        print(f"\n合并条件检查:")
+        for cond, passed in result["conditions"].items():
+            status = "PASS" if passed else "FAIL"
+            print(f"  [{status}] {cond}")
+        print(f"\n总体结果: {'通过' if result['all_pass'] else '未通过'}")
+
+    elif args.command == "workflow-finish":
+        task = None
+        for d in ["active", "done"]:
+            fpath = os.path.join(TASKS_DIR, d, f"{args.task_id}.json")
+            if os.path.exists(fpath):
+                task = load_json(fpath)
+                break
+        if not task:
+            print(f"任务 {args.task_id} 不存在")
+            return
+
+        print(f"\n开始完整提交流程: {args.task_id}\n")
+
+        branch = format_branch_name(task)
+        print(f"[1/4] 创建分支: {branch}")
+        if not git_branch_create(branch, args.base):
+            return
+
+        print(f"[2/4] 暂存文件: {len(args.paths)} 个文件")
+        if not git_stage(args.paths):
+            return
+
+        message = args.message or format_commit_message(task)
+        print(f"[3/4] 提交: {message}")
+        if not git_commit(message):
+            return
+
+        if not args.skip_push:
+            print(f"[4/4] 推送到远程: {branch}")
+            if not git_push(branch):
+                return
+
+        update_task_status(args.task_id, "DONE", "done")
+        ctx = get_context()
+        ctx["system_state"]["current_branch"] = branch
+        ctx["system_state"]["baseline_commit"] = branch
+        save_json(CONTEXT_FILE, ctx)
+
+        append_audit("WORKFLOW_COMPLETED", "scheduler",
+                     f"任务 {args.task_id} 已完成提交流程，分支: {branch}")
+        print(f"\n提交流程完成！分支: {branch}")
+        print(f"提交信息: {message}")
+        print(f"下一步: 创建 Pull Request 合并到 {args.base}")
 
     else:
         parser.print_help()

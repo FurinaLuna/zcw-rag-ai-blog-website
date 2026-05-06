@@ -934,6 +934,32 @@ python .claude/coordination/scheduler.py context-show --section audit
 # 添加审计日志
 python .claude/coordination/scheduler.py audit \
     --event TASK_COMPLETED --actor fe --summary "task_fe_001 已完成"
+
+# 设置质量门禁状态（供 merge-check 使用）
+python .claude/coordination/scheduler.py quality-gate \
+    --gate unit_tests --status PASSED
+python .claude/coordination/scheduler.py quality-gate \
+    --gate security_review --status PASSED
+python .claude/coordination/scheduler.py quality-gate \
+    --gate integration_tests --status PASSED
+
+# Git 操作：创建功能分支（自动按 teammate.md 规范命名）
+python .claude/coordination/scheduler.py git-branch task_fe_001
+
+# Git 操作：暂存并提交代码
+python .claude/coordination/scheduler.py git-commit task_fe_001 \
+    -p frontend/pages/ask.vue frontend/components/rag/
+
+# Git 操作：推送到远程
+python .claude/coordination/scheduler.py git-push task_fe_001
+
+# 检查合并条件
+python .claude/coordination/scheduler.py merge-check
+
+# 完整提交流程（分支→暂存→提交→推送，一键完成）
+python .claude/coordination/scheduler.py workflow-finish task_fe_001 \
+    -p frontend/pages/ask.vue frontend/components/rag/ \
+    -m "feat(frontend): 文章详情页来源列表展示"
 ```
 
 ### 11.3 持续运行模式
@@ -949,6 +975,54 @@ python .claude/coordination/scheduler.py audit \
 6. 使用 task-move 将完成的任务移至 done/
 7. 调度器自动检查依赖就绪的下一个任务
 8. 循环直到所有任务完成
+```
+
+### 11.4 完整提交流程（模块开发到仓库提交）
+
+以下是从零开始完成一个小模块并提交到仓库的完整流程：
+
+```
+步骤 1: 创建任务
+  python scheduler.py task-create -f task_def.json
+
+步骤 2: 调度任务
+  python scheduler.py dispatch
+
+步骤 3: Agent 实现代码（人工或 Claude Code 执行）
+  - 读取 teammate.md 确认分工边界
+  - 申请文件锁
+  - 编写代码
+  - 运行测试
+  - 设置质量门禁状态
+    python scheduler.py quality-gate --gate unit_tests --status PASSED
+    python scheduler.py quality-gate --gate security_review --status PASSED
+  - 释放文件锁
+
+步骤 4: 创建功能分支（自动按 teammate.md 10.1 规范命名）
+  python scheduler.py git-branch task_fe_001
+  → 生成分支: feat/fe/task_fe_001/ask-source-list
+
+步骤 5: 暂存并提交代码
+  python scheduler.py git-commit task_fe_001 -p <修改的文件路径>
+
+步骤 6: 推送到远程
+  python scheduler.py git-push task_fe_001
+
+步骤 7: 检查合并条件
+  python scheduler.py merge-check
+
+步骤 8: 创建 Pull Request（手动或通过 GitHub CLI）
+  gh pr create --base main --head feat/fe/task_fe_001/ask-source-list \
+    --title "feat(frontend): 文章详情页来源列表展示" \
+    --body "关联任务: task_fe_001"
+
+步骤 9: 合并后更新上下文
+  python scheduler.py audit --event MERGE_COMPLETED \
+    --actor orch --summary "task_fe_001 已合并到 main"
+
+一键完成（步骤 4-6）:
+  python scheduler.py workflow-finish task_fe_001 \
+    -p frontend/pages/ask.vue frontend/components/rag/
 ```
 
 ## 12. 快速参考

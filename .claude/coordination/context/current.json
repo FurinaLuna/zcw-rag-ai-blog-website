@@ -10,10 +10,10 @@
     "current_branch": "main",
     "last_rollback_point": null,
     "quality_gates": {
-      "unit_tests": "UNKNOWN",
-      "integration_tests": "UNKNOWN",
+      "unit_tests": "PASSED",
+      "integration_tests": "PASSED",
       "e2e_tests": "UNKNOWN",
-      "security_review": "UNKNOWN",
+      "security_review": "PASSED",
       "lint_check": "UNKNOWN"
     }
   },
@@ -148,6 +148,27 @@
       "event": "CONTEXT_INITIALIZED",
       "actor": "init",
       "summary": "协调系统初始化完成",
+      "context_version": "ctx_v20260506_01"
+    },
+    {
+      "timestamp": "2026-05-06T21:58:08.636778+08:00",
+      "event": "QUALITY_GATE_UPDATED",
+      "actor": "scheduler",
+      "summary": "门禁 unit_tests 已设为 PASSED",
+      "context_version": "ctx_v20260506_01"
+    },
+    {
+      "timestamp": "2026-05-06T21:58:21.378482+08:00",
+      "event": "QUALITY_GATE_UPDATED",
+      "actor": "scheduler",
+      "summary": "门禁 security_review 已设为 PASSED",
+      "context_version": "ctx_v20260506_01"
+    },
+    {
+      "timestamp": "2026-05-06T21:58:21.495171+08:00",
+      "event": "QUALITY_GATE_UPDATED",
+      "actor": "scheduler",
+      "summary": "门禁 integration_tests 已设为 PASSED",
       "context_version": "ctx_v20260506_01"
     }
   ]

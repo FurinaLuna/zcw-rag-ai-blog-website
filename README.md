@@ -45,11 +45,11 @@
 
 | 首页 | 文章列表 |
 |------|---------|
-| ![](docs/screenshots/homepage.png) | ![](docs/screenshots/articles.png) |
+| ![](docs/补充材料/screenshots/homepage.png) | ![](docs/补充材料/screenshots/articles.png) |
 
 | RAG 问答 | 管理后台 |
 |------|---------|
-| ![](docs/screenshots/ask.png) | ![](docs/screenshots/admin-login.png) |
+| ![](docs/补充材料/screenshots/ask.png) | ![](docs/补充材料/screenshots/admin-login.png) |
 
 ## 快速开始
 
@@ -152,7 +152,8 @@ ORM 模型：[backend/app/models/](backend/app/models/) | 迁移脚本：[backen
 
 ## 文档
 
-- [项目开发文档](docs/基于混合渲染与PgVector向量检索的智能内容服务平台%20-%20企业级开发文档.md)
+- [开发文档总览](docs/README.md)
+- [项目架构与总体方案](docs/基于混合渲染与PgVector向量检索的智能内容服务平台%20-%20企业级开发文档.md)
 - [API 接口规范](docs/backend/API接口规范-V1.0.md)
 - [数据库设计](docs/backend/数据库设计详细文档-V1.0.md)
 - [后端开发规范](docs/backend/后端开发规范-V1.0.md)

@@ -76,8 +76,8 @@ const route = useRoute();
 const api = useApi();
 
 const isNew = computed(() => route.params.id === "new");
-const article = ref<any>(null);
-const categories = ref<any[]>([]);
+const article = ref<ArticleAdminResponse | null>(null);
+const categories = ref<CategoryResponse[]>([]);
 const saving = ref(false);
 const message = ref("");
 const errorMsg = ref(false);
@@ -93,13 +93,13 @@ const form = reactive({
 });
 
 try {
-  const catRes = await api.get<any>("/admin/categories");
+  const catRes = await api.get<ApiResponse<CategoryResponse[]>>("/admin/categories");
   if (catRes.success) categories.value = catRes.data;
 } catch {}
 
 if (!isNew.value) {
   try {
-    const res = await api.get<any>(`/admin/articles/${route.params.id}`);
+    const res = await api.get<ApiResponse<ArticleAdminResponse>>(`/admin/articles/${route.params.id}`);
     if (res.success) {
       article.value = res.data;
       Object.assign(form, {
@@ -121,7 +121,7 @@ async function save() {
   errorMsg.value = false;
   try {
     if (isNew.value) {
-      const res = await api.post<any>("/admin/articles", form);
+      const res = await api.post<ApiResponse<ArticleAdminResponse>>("/admin/articles", form);
       if (res.success) {
         message.value = "创建成功";
         navigateTo(`/admin/articles/${res.data.id}`);
@@ -130,8 +130,9 @@ async function save() {
       await api.put(`/admin/articles/${route.params.id}`, form);
       message.value = "保存成功";
     }
-  } catch (e: any) {
-    message.value = e?.data?.message || "保存失败";
+  } catch (e: unknown) {
+    const err = e as { data?: { message?: string }; message?: string } | undefined;
+    message.value = err?.data?.message || err?.message || "保存失败";
     errorMsg.value = true;
   } finally {
     saving.value = false;
@@ -143,7 +144,7 @@ async function publish() {
     await api.post(`/admin/articles/${route.params.id}/publish`);
     message.value = "发布成功";
     errorMsg.value = false;
-  } catch (e: any) {
+  } catch {
     message.value = "发布失败";
     errorMsg.value = true;
   }

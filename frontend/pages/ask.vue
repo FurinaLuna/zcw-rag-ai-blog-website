@@ -75,15 +75,16 @@ const api = useApi();
 const config = useRuntimeConfig();
 const authStore = useAuthStore();
 
-const question = ref((route.query.q as string) || "");
+const q = route.query.q;
+const question = ref((Array.isArray(q) ? q[0] : q) || "");
 const sending = ref(false);
 const error = ref("");
-const messages = ref<{ role: string; content: string; sources?: any[] }[]>([]);
+const messages = ref<{ role: string; content: string; sources?: SourceInfo[] }[]>([]);
 const suggestions = ref<string[]>([]);
 const streamingFailed = ref(false);
 
 try {
-  const res = await api.get<any>("/rag/suggestions");
+  const res = await api.get<ApiResponse<string[]>>("/rag/suggestions");
   if (res.success) suggestions.value = res.data;
 } catch {}
 
@@ -126,7 +127,7 @@ async function tryStream(q: string): Promise<boolean> {
     }
 
     // Push empty assistant message that will be filled by the stream
-    const assistantMsg = { role: "assistant" as const, content: "", sources: [] as any[] };
+    const assistantMsg: { role: string; content: string; sources: SourceInfo[] } = { role: "assistant", content: "", sources: [] };
     messages.value.push(assistantMsg);
 
     const reader = response.body.getReader();
@@ -182,7 +183,7 @@ async function tryStream(q: string): Promise<boolean> {
 
 async function nonStreamAsk(q: string) {
   try {
-    const res = await api.post<any>("/rag/ask", { question: q });
+    const res = await api.post<ApiResponse<AskResponse>>("/rag/ask", { question: q });
     if (res.success) {
       messages.value.push({
         role: "assistant",

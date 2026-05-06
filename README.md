@@ -22,7 +22,7 @@
 | AI 能力 | BGE-small-zh-v1.5 Embedding + OpenAI-compatible LLM API |
 | 前端监控 | 自研 Monitor SDK (web-vitals + IntersectionObserver + sendBeacon) |
 | 部署 | Docker + Docker Compose |
-| 测试 | pytest (后端 41 tests) + Vitest (前端 15 tests) + Playwright E2E |
+| 测试 | pytest (后端 104 tests) + Vitest (前端 24 tests) + Playwright E2E |
 
 ## 项目架构
 
@@ -96,10 +96,10 @@ npm run dev                    # 启动前端 (端口3000)
 ### 运行测试
 
 ```bash
-# 后端单元测试 (41 tests)
+# 后端单元测试 (104 tests)
 cd backend && pytest tests/ -v
 
-# 前端单元测试 (15 tests)
+# 前端单元测试 (24 tests)
 cd frontend && npx vitest run
 
 # 前端类型检查
@@ -163,20 +163,18 @@ ORM 模型：[backend/app/models/](backend/app/models/) | 迁移脚本：[backen
 
 | 测试集 | 数量 | 框架 |
 |--------|------|------|
-| 后端纯函数 (RAG/Security) | 41 | pytest |
-| 后端 Service 层 | 14 | pytest + mock |
-| 后端 API 集成 | 11 | pytest + httpx |
-| 前端单元测试 | 15 | Vitest |
+| 后端测试 | 104 | pytest |
+| 前端单元测试 | 24 | Vitest |
 | 前端 E2E | 9 | Playwright |
-| **总计** | **90** | |
+| **总计** | **137** | |
 
 ```bash
-cd backend && pytest tests/ -q   # 66 tests
-cd frontend && npx vitest run    # 15 tests
+cd backend && pytest tests/ -q   # 104 tests
+cd frontend && npx vitest run    # 24 tests
 cd frontend && npx nuxt typecheck # 0 errors
 ```
 
-## 前端组件 (18)
+## 前端组件 (21)
 
 **通用组件**: Skeleton · BaseButton · FormField · Pagination · DataTable · MetricCard · StatusBadge · BackToTop
 

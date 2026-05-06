@@ -1,0 +1,40 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - link "跳转到主要内容" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - main [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e8]:
+          - generic [ref=e9]:
+            - heading "技术内容沉淀与智能检索" [level=1] [ref=e10]
+            - paragraph [ref=e11]: 基于 Nuxt3 混合渲染与 PgVector 向量检索的智能内容平台。在这里，内容高效分发，AI 精准作答。
+            - generic [ref=e12]:
+              - link "浏览文章" [ref=e13] [cursor=pointer]:
+                - /url: /articles
+              - link "AI 问答" [ref=e14] [cursor=pointer]:
+                - /url: /ask
+          - generic [ref=e16]:
+            - heading "快速提问" [level=3] [ref=e17]
+            - generic [ref=e18]:
+              - button "Nuxt3 有哪些核心特性？" [ref=e19] [cursor=pointer]
+              - button "什么是 RAG 技术？" [ref=e20] [cursor=pointer]
+              - button "如何优化前端性能？" [ref=e21] [cursor=pointer]
+        - generic [ref=e23]:
+          - heading "精选文章" [level=2] [ref=e24]
+          - generic [ref=e25]: 暂无文章
+        - generic [ref=e27]:
+          - heading "知识专题" [level=2] [ref=e28]
+          - generic [ref=e29]: 暂无专题
+        - heading "系统能力" [level=2] [ref=e32]
+    - button "打开智能问答" [ref=e34] [cursor=pointer]:
+      - img [ref=e35]
+  - generic:
+    - img
+  - generic [ref=e37]:
+    - button "Toggle Nuxt DevTools" [ref=e38] [cursor=pointer]:
+      - img [ref=e39]
+    - generic "Page load time" [ref=e42]:
+      - generic [ref=e43]: "2.7"
+      - generic [ref=e44]: s
+    - button "Toggle Component Inspector" [ref=e46] [cursor=pointer]:
+      - img [ref=e47]

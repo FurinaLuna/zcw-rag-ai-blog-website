@@ -36,8 +36,9 @@ definePageMeta({ ssr: false });
 const route = useRoute();
 const api = useApi();
 
-const query = ref((route.query.q as string) || "");
-const results = ref<any[]>([]);
+const q = route.query.q;
+const query = ref((Array.isArray(q) ? q[0] : q) || "");
+const results = ref<ArticleListResponse[]>([]);
 const total = ref(0);
 const loading = ref(false);
 const searched = ref(false);
@@ -49,7 +50,7 @@ async function doSearch() {
   searched.value = true;
   searchedQuery.value = query.value;
   try {
-    const res = await api.get<any>("/public/search", { q: query.value });
+    const res = await api.get<ApiResponse<PaginatedData<ArticleListResponse>>>("/public/search", { q: query.value });
     if (res.success) {
       results.value = res.data.items;
       total.value = res.data.total;

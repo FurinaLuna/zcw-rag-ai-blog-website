@@ -7,7 +7,16 @@
       "Bash(python -m pytest tests/test_services.py -v --tb=short)",
       "mcp__playwright__browser_resize",
       "Bash(python -m pytest tests/test_services.py::TestArticleStatusTransitions::test_publish_already_published_article tests/test_services.py::TestArticleStatusTransitions::test_archive_then_publish_article -v --tb=short)",
-      "Bash(python -m pytest tests/test_services.py::TestArticleStatusTransitions::test_publish_draft_article -v --tb=short)"
+      "Bash(python -m pytest tests/test_services.py::TestArticleStatusTransitions::test_publish_draft_article -v --tb=short)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(python -m pytest tests/ -q)",
+      "Bash(python3 -m pytest tests/ -q)",
+      "Bash(npx vitest *)",
+      "Bash(git *)",
+      "Bash(npx nuxt *)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_snapshot"
     ]
   }
 }

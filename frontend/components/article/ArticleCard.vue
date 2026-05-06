@@ -26,11 +26,11 @@ const props = defineProps<{
   article: {
     id: number;
     title: string;
-    summary?: string;
+    summary: string | null;
     slug: string;
-    category?: { name: string };
-    reading_time?: number;
-    published_at?: string;
+    category: { name: string } | null;
+    reading_time: number | null;
+    published_at: string | null;
   };
 }>();
 

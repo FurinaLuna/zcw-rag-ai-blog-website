@@ -23,10 +23,10 @@
 
 <script setup lang="ts">
 const api = useApi();
-const topics = ref<any[]>([]);
+const topics = ref<CategoryResponse[]>([]);
 
 try {
-  const res = await api.get<any>("/public/topics");
+  const res = await api.get<ApiResponse<CategoryResponse[]>>("/public/topics");
   if (res.success) topics.value = res.data;
 } catch {}
 

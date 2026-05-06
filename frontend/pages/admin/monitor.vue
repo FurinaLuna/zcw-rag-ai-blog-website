@@ -83,8 +83,8 @@ definePageMeta({ layout: "admin", middleware: "auth", ssr: false });
 import dayjs from "dayjs";
 
 const api = useApi();
-const logs = ref<any[]>([]);
-const allLogs = ref<any[]>([]);
+const logs = ref<MonitorLogResponse[]>([]);
+const allLogs = ref<MonitorLogResponse[]>([]);
 const loading = ref(true);
 const eventType = ref("");
 const dateStart = ref("");
@@ -103,20 +103,20 @@ const stats = computed(() => {
 async function fetchLogs() {
   loading.value = true;
   try {
-    const params: Record<string, any> = {
+    const params: Record<string, string | number | undefined> = {
       page_size: 50,
     };
     if (eventType.value) params.event_type = eventType.value;
     if (dateStart.value) params.start_time = dateStart.value;
     if (dateEnd.value) params.end_time = dateEnd.value + "T23:59:59";
 
-    const allParams: Record<string, any> = { page_size: 200 };
+    const allParams: Record<string, string | number | undefined> = { page_size: 200 };
     if (dateStart.value) allParams.start_time = dateStart.value;
     if (dateEnd.value) allParams.end_time = dateEnd.value + "T23:59:59";
 
     const [filteredRes, allRes] = await Promise.all([
-      api.get<any>("/monitor/stats", params),
-      api.get<any>("/monitor/stats", allParams),
+      api.get<ApiResponse<PaginatedData<MonitorLogResponse>>>("/monitor/stats", params),
+      api.get<ApiResponse<PaginatedData<MonitorLogResponse>>>("/monitor/stats", allParams),
     ]);
     if (filteredRes.success) logs.value = filteredRes.data.items;
     if (allRes.success) allLogs.value = allRes.data.items;

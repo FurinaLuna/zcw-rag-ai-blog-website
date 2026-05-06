@@ -24,7 +24,7 @@ defineProps<{
   articles: Array<{
     id: number;
     title: string;
-    summary?: string;
+    summary: string | null;
     slug: string;
   }>;
 }>();

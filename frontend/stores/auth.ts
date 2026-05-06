@@ -33,10 +33,7 @@ export const useAuthStore = defineStore("auth", {
     async login(username: string, password: string) {
       const { useApi } = await import("~/composables/useApi");
       const api = useApi();
-      const res = await api.post<{
-        success: boolean;
-        data: { access_token: string };
-      }>("/admin/login", { username, password });
+      const res = await api.post<ApiResponse<TokenResponse>>("/admin/login", { username, password });
       if (res.success) {
         this.setToken(res.data.access_token);
         await this.fetchAdmin();
@@ -49,7 +46,7 @@ export const useAuthStore = defineStore("auth", {
       try {
         const { useApi } = await import("~/composables/useApi");
         const api = useApi();
-        const res = await api.get<{ success: boolean; data: { id: number; username: string } }>("/admin/me");
+        const res = await api.get<ApiResponse<AdminInfo>>("/admin/me");
         if (res.success) {
           this.setAdmin(res.data);
         }

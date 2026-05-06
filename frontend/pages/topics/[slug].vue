@@ -24,14 +24,14 @@ const route = useRoute();
 const slug = route.params.slug as string;
 const api = useApi();
 
-const topic = ref<any>(null);
-const articles = ref<any[]>([]);
+const topic = ref<CategoryResponse | null>(null);
+const articles = ref<ArticleListResponse[]>([]);
 const loading = ref(true);
 
 try {
   const [topicRes, artRes] = await Promise.all([
-    api.get<any>(`/public/topics/${slug}`),
-    api.get<any>("/public/articles", { topic_slug: slug, page_size: 20 }),
+    api.get<ApiResponse<CategoryResponse>>(`/public/topics/${slug}`),
+    api.get<ApiResponse<PaginatedData<ArticleListResponse>>>("/public/articles", { topic_slug: slug, page_size: 20 }),
   ]);
   if (topicRes.success) topic.value = topicRes.data;
   if (artRes.success) articles.value = artRes.data.items;

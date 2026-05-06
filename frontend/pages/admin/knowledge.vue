@@ -74,16 +74,16 @@
 definePageMeta({ layout: "admin", middleware: "auth", ssr: false });
 
 const api = useApi();
-const status = ref<any>(null);
-const articles = ref<any[]>([]);
+const status = ref<KnowledgeStatus | null>(null);
+const articles = ref<KnowledgeArticleItem[]>([]);
 const rebuilding = ref(false);
 const syncingId = ref<number | null>(null);
 
 async function fetchStatus() {
   try {
     const [sRes, aRes] = await Promise.all([
-      api.get<any>("/admin/knowledge/status"),
-      api.get<any>("/admin/knowledge/articles", { page_size: 50 }),
+      api.get<ApiResponse<KnowledgeStatus>>("/admin/knowledge/status"),
+      api.get<ApiResponse<PaginatedData<KnowledgeArticleItem>>>("/admin/knowledge/articles", { page_size: 50 }),
     ]);
     if (sRes.success) status.value = sRes.data;
     if (aRes.success) articles.value = aRes.data.items;

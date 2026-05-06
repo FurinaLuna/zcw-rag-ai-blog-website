@@ -42,8 +42,8 @@
 <script setup lang="ts">
 const api = useApi();
 
-const articles = ref<any[]>([]);
-const categories = ref<any[]>([]);
+const articles = ref<ArticleListResponse[]>([]);
+const categories = ref<CategoryResponse[]>([]);
 const loading = ref(true);
 const page = ref(1);
 const totalPages = ref(1);
@@ -54,13 +54,13 @@ async function fetchArticles() {
   loading.value = true;
   try {
     const [artRes, catRes] = await Promise.all([
-      api.get<any>("/public/articles", {
+      api.get<ApiResponse<PaginatedData<ArticleListResponse>>>("/public/articles", {
         page: page.value,
         page_size: 12,
         category_slug: categorySlug.value || undefined,
         sort_by: sortBy.value,
       }),
-      api.get<any>("/public/categories"),
+      api.get<ApiResponse<CategoryResponse[]>>("/public/categories"),
     ]);
     if (artRes.success) {
       articles.value = artRes.data.items;

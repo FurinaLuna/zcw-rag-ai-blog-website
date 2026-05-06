@@ -94,8 +94,8 @@ definePageMeta({ layout: "default" });
 
 const api = useApi();
 
-const articles = ref<any[]>([]);
-const topics = ref<any[]>([]);
+const articles = ref<ArticleListResponse[]>([]);
+const topics = ref<CategoryResponse[]>([]);
 const totalArticles = ref(0);
 const totalChunks = ref(0);
 const loading = ref(true);
@@ -107,7 +107,7 @@ const quickQuestions = [
 ];
 
 try {
-  const res = await api.get<any>("/public/home");
+  const res = await api.get<ApiResponse<HomeData>>("/public/home");
   if (res.success) {
     articles.value = res.data.featured_articles || [];
     topics.value = res.data.topics || [];

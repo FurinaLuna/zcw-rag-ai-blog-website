@@ -90,11 +90,18 @@ async function send() {
 
   try {
     const api = useApi();
-    const res = await api.post<any>("/rag/ask", { question: q });
-    messages.value.push({
-      role: "assistant",
-      content: res.data?.answer || "抱歉，暂时无法回答该问题。",
-    });
+    const res = await api.post<ApiResponse<AskResponse>>("/rag/ask", { question: q });
+    if (res.success && res.data) {
+      messages.value.push({
+        role: "assistant",
+        content: res.data.answer || "抱歉，暂时无法回答该问题。",
+      });
+    } else {
+      messages.value.push({
+        role: "assistant",
+        content: "抱歉，暂时无法回答该问题。",
+      });
+    }
   } catch {
     messages.value.push({
       role: "assistant",

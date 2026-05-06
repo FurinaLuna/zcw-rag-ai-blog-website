@@ -50,8 +50,9 @@ async function handleLogin() {
   try {
     await authStore.login(username.value, password.value);
     navigateTo("/admin");
-  } catch (e: any) {
-    error.value = e?.data?.message || "登录失败，请检查账号密码";
+  } catch (e: unknown) {
+    const err = e as { data?: { message?: string }; message?: string } | undefined;
+    error.value = err?.data?.message || err?.message || "登录失败，请检查账号密码";
   } finally {
     loading.value = false;
   }

@@ -113,21 +113,21 @@ definePageMeta({ layout: "admin", middleware: "auth", ssr: false });
 import dayjs from "dayjs";
 
 const api = useApi();
-const overview = ref({ pv: 0, uv: 0, rag_questions: 0, error_count: 0 });
-const popular = ref<any[]>([]);
-const knowledge = ref<any>(null);
-const trends = ref<any[]>([]);
-const recentErrors = ref<any[]>([]);
+const overview = ref<TodayOverview>({ pv: 0, uv: 0, rag_questions: 0, error_count: 0 });
+const popular = ref<HotArticle[]>([]);
+const knowledge = ref<KnowledgeStatus | null>(null);
+const trends = ref<TrendItem[]>([]);
+const recentErrors = ref<MonitorLogResponse[]>([]);
 const vitals = ref({ lcp: 0, cls: 0, inp: 0 });
 
 try {
   const [overRes, popRes, knowRes, trendRes, errRes, vitalsRes] = await Promise.all([
-    api.get<any>("/admin/dashboard/overview"),
-    api.get<any>("/admin/dashboard/popular-articles", { limit: 10 }),
-    api.get<any>("/admin/knowledge/status"),
-    api.get<any>("/admin/dashboard/trends", { days: 7 }),
-    api.get<any>("/monitor/stats", { event_type: "error", page_size: 10 }),
-    api.get<any>("/monitor/stats", { event_type: "web_vital", page_size: 200 }),
+    api.get<ApiResponse<TodayOverview>>("/admin/dashboard/overview"),
+    api.get<ApiResponse<HotArticle[]>>("/admin/dashboard/popular-articles", { limit: 10 }),
+    api.get<ApiResponse<KnowledgeStatus>>("/admin/knowledge/status"),
+    api.get<ApiResponse<TrendItem[]>>("/admin/dashboard/trends", { days: 7 }),
+    api.get<ApiResponse<PaginatedData<MonitorLogResponse>>>("/monitor/stats", { event_type: "error", page_size: 10 }),
+    api.get<ApiResponse<PaginatedData<MonitorLogResponse>>>("/monitor/stats", { event_type: "web_vital", page_size: 200 }),
   ]);
   if (overRes.success) overview.value = overRes.data;
   if (popRes.success) popular.value = popRes.data;
@@ -141,7 +141,7 @@ try {
       const m = item.event_data?.metric;
       const v = item.event_data?.value;
       if (m && typeof v === "number") {
-        (metrics[m] ||= []).push(v);
+        (metrics[m as string] ||= []).push(v);
       }
     }
     vitals.value = {

@@ -65,14 +65,15 @@ import type MarkdownIt from "markdown-it";
 import markdownit from "markdown-it";
 import dayjs from "dayjs";
 import "highlight.js/styles/github-dark.css";
+import hljs from "highlight.js";
 
 const route = useRoute();
 const slug = route.params.slug as string;
 
 const api = useApi();
-const article = ref<any>(null);
+const article = ref<ArticleDetailResponse | null>(null);
 const loading = ref(true);
-const relatedArticles = ref<any[]>([]);
+const relatedArticles = ref<ArticleListResponse[]>([]);
 
 let md: MarkdownIt;
 
@@ -82,7 +83,6 @@ function createMarkdown(): MarkdownIt {
     linkify: true,
     highlight(str: string, lang: string): string {
       try {
-        const hljs = require("highlight.js");
         if (lang && hljs.getLanguage(lang)) {
           return `<pre class="group relative"><code class="hljs ${lang}">${hljs.highlight(str, { language: lang }).value}</code><button class="copy-btn" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent);this.textContent='已复制';setTimeout(()=>this.textContent='复制',2000)" aria-label="复制代码">复制</button></pre>`;
         }
@@ -101,7 +101,7 @@ const renderedContent = computed(() => {
 });
 
 try {
-  const res = await api.get<any>(`/public/articles/${slug}`);
+  const res = await api.get<ApiResponse<ArticleDetailResponse>>(`/public/articles/${slug}`);
   if (res.success) {
     article.value = res.data;
 
@@ -127,7 +127,7 @@ try {
             author: { "@type": "Organization", name: "智能内容平台" },
             publisher: { "@type": "Organization", name: "智能内容平台" },
           }),
-        } as any,
+        },
       ],
     });
 

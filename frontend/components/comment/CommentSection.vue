@@ -55,7 +55,7 @@ const props = defineProps<{
 }>();
 
 const api = useApi();
-const comments = ref<any[]>([]);
+const comments = ref<CommentResponse[]>([]);
 const total = ref(0);
 const page = ref(1);
 const totalPages = ref(1);
@@ -64,7 +64,7 @@ const loading = ref(true);
 async function fetchComments() {
   loading.value = true;
   try {
-    const res = await api.get<any>(`/public/articles/${props.articleSlug}/comments`, {
+    const res = await api.get<ApiResponse<PaginatedData<CommentResponse>>>(`/public/articles/${props.articleSlug}/comments`, {
       page: page.value,
       page_size: 20,
     });
@@ -80,7 +80,7 @@ async function fetchComments() {
 
 async function likeComment(commentId: number) {
   try {
-    const res = await api.post<any>(`/public/comments/${commentId}/like`);
+    const res = await api.post<ApiResponse<CommentResponse>>(`/public/comments/${commentId}/like`);
     if (res.success) {
       const target = comments.value.find((c) => c.id === commentId);
       if (target) target.likes = res.data.likes;

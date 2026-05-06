@@ -1,0 +1,27 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - link "跳转到主要内容" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - main [ref=e5]:
+      - generic [ref=e6]:
+        - heading "文章列表" [level=1] [ref=e7]
+        - paragraph [ref=e8]: 技术内容沉淀与知识分发
+        - generic [ref=e9]:
+          - combobox [ref=e10]:
+            - option "全部分类" [selected]
+          - combobox [ref=e11]:
+            - option "最新发布" [selected]
+            - option "最多浏览"
+        - paragraph [ref=e13]: 暂无文章
+    - button "打开智能问答" [ref=e15] [cursor=pointer]:
+      - img [ref=e16]
+  - generic:
+    - img
+  - generic [ref=e18]:
+    - button "Toggle Nuxt DevTools" [ref=e19] [cursor=pointer]:
+      - img [ref=e20]
+    - generic "Page load time" [ref=e23]:
+      - generic [ref=e24]: "2.4"
+      - generic [ref=e25]: s
+    - button "Toggle Component Inspector" [ref=e27] [cursor=pointer]:
+      - img [ref=e28]

@@ -87,7 +87,7 @@ definePageMeta({ layout: "admin", middleware: "auth", ssr: false });
 import dayjs from "dayjs";
 
 const api = useApi();
-const articles = ref<any[]>([]);
+const articles = ref<ArticleAdminResponse[]>([]);
 const loading = ref(true);
 const keyword = ref("");
 const statusFilter = ref("");
@@ -101,7 +101,7 @@ function debouncedSearch() {
 async function fetchArticles() {
   loading.value = true;
   try {
-    const res = await api.get<any>("/admin/articles", {
+    const res = await api.get<ApiResponse<PaginatedData<ArticleAdminResponse>>>("/admin/articles", {
       page_size: 50,
       keyword: keyword.value || undefined,
       status: statusFilter.value || undefined,

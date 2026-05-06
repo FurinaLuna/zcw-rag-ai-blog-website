@@ -1,0 +1,154 @@
+{
+  "schema_version": "2.0",
+  "context_version": "ctx_v20260506_01",
+  "updated_at": "2026-05-06T21:40:04.683068+08:00",
+  "updated_by": "init",
+  "system_state": {
+    "status": "IDLE",
+    "active_sprint": "Sprint-1",
+    "baseline_commit": null,
+    "current_branch": "main",
+    "last_rollback_point": null,
+    "quality_gates": {
+      "unit_tests": "UNKNOWN",
+      "integration_tests": "UNKNOWN",
+      "e2e_tests": "UNKNOWN",
+      "security_review": "UNKNOWN",
+      "lint_check": "UNKNOWN"
+    }
+  },
+  "environment": {
+    "runtime": {
+      "node_version": null,
+      "python_version": null,
+      "docker_available": false
+    },
+    "backend": {
+      "framework": "FastAPI",
+      "database_url": "postgresql://localhost:5432/zcw_rag_blog",
+      "redis_url": "redis://localhost:6379/0",
+      "vector_store": "pgvector",
+      "embedding_model": "text-embedding-3-small"
+    },
+    "frontend": {
+      "framework": "Nuxt 3",
+      "ssr_mode": "hybrid",
+      "ui_library": "Tailwind CSS",
+      "api_base_url": "http://localhost:8000/api/v1"
+    },
+    "ai_models": {
+      "reasoner": "deepseek-reasoner",
+      "chat": "deepseek-chat",
+      "embedding": "text-embedding-3-small"
+    }
+  },
+  "resource_allocation": {
+    "agents": {
+      "orch": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 1,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      },
+      "spec": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 2,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      },
+      "arch": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 2,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      },
+      "fe": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 2,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      },
+      "be": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 2,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      },
+      "db": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 2,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      },
+      "ai": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 2,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      },
+      "qa": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 4,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      },
+      "ops": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 2,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      },
+      "sec": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 2,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      },
+      "doc": {
+        "status": "AVAILABLE",
+        "active_tasks": [],
+        "max_concurrent": 3,
+        "recent_failure_rate": 0.0,
+        "avg_completion_minutes": 0
+      }
+    },
+    "locks": [],
+    "global_lock": null
+  },
+  "task_execution_context": {
+    "task_queue": [],
+    "active_tasks": [],
+    "blocked_tasks": [],
+    "dependency_graph": {
+      "nodes": [],
+      "edges": []
+    },
+    "recently_completed": [],
+    "recently_failed": []
+  },
+  "review_context": {
+    "pending_reviews": [],
+    "in_progress_reviews": [],
+    "completed_reviews": []
+  },
+  "incident_log": [],
+  "audit_trail": [
+    {
+      "timestamp": "2026-05-06T21:40:04.683553+08:00",
+      "event": "CONTEXT_INITIALIZED",
+      "actor": "init",
+      "summary": "协调系统初始化完成",
+      "context_version": "ctx_v20260506_01"
+    }
+  ]
+}

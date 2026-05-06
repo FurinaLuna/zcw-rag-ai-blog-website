@@ -1,0 +1,256 @@
+{
+  "schema_version": "2.0",
+  "template_id": "task_template_base",
+  "template_name": "通用任务模板",
+  "description": "所有 Agent 任务的标准化基础模板，定义任务生命周期中的通用字段与结构",
+
+  "task_definition": {
+    "task_id": {
+      "type": "string",
+      "pattern": "^task_(spec|fe|be|db|ai|qa|ops|doc)_\\d{3}$",
+      "description": "全局唯一任务标识符，格式: task_{domain}_{seq}"
+    },
+    "title": {
+      "type": "string",
+      "description": "任务标题，简洁描述任务内容"
+    },
+    "owner": {
+      "type": "string",
+      "enum": ["spec", "arch", "fe", "be", "db", "ai", "qa", "ops", "sec", "doc"],
+      "description": "负责该任务的 Agent ID"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["P0", "P1", "P2", "P3"],
+      "description": "优先级: P0(>=90), P1(75-89), P2(50-74), P3(<50)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "CREATED", "QUEUED", "ASSIGNED", "ACCEPTED",
+        "RUNNING", "WAITING_DEPENDENCY", "WAITING_REVIEW", "WAITING_HANDOFF", "RETRYING",
+        "DONE", "PARTIAL_DONE",
+        "BLOCKED", "INVALID_INPUT", "LOCK_CONFLICT", "SECURITY_DENIED",
+        "ARTIFACT_MISSING", "TIMEOUT", "MERGE_CONFLICT", "CONTRACT_MISMATCH",
+        "RATE_LIMITED", "INTERNAL_ERROR", "AGENT_UNAVAILABLE"
+      ],
+      "description": "任务当前状态码"
+    },
+    "goal": {
+      "type": "string",
+      "description": "任务的核心目标描述"
+    },
+    "scope": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "任务允许修改的文件路径列表"
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "任务执行必须遵守的约束条件"
+    },
+    "dependencies": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "当前任务依赖的其他任务 ID 列表"
+    },
+    "acceptance": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "任务完成的验收条件列表"
+    },
+    "context_version": {
+      "type": "string",
+      "pattern": "^ctx_v\\d{8}_\\d{2}$",
+      "description": "任务创建时引用的上下文版本"
+    }
+  },
+
+  "input_parameters": {
+    "type": "object",
+    "properties": {
+      "task_id": { "type": "string", "description": "由 orch 分配的任务 ID" },
+      "goal": { "type": "string", "description": "任务目标" },
+      "scope": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "允许修改的文件路径"
+      },
+      "constraints": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "约束条件"
+      },
+      "dependencies": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "前置依赖任务 ID"
+      },
+      "acceptance": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "验收条件"
+      },
+      "context_version": {
+        "type": "string",
+        "description": "上下文版本号"
+      },
+      "extra": {
+        "type": "object",
+        "description": "领域特定的扩展参数",
+        "additionalProperties": true
+      }
+    },
+    "required": ["task_id", "goal", "scope", "acceptance"]
+  },
+
+  "output_format": {
+    "type": "object",
+    "properties": {
+      "task_id": { "type": "string", "description": "任务 ID" },
+      "agent": { "type": "string", "description": "执行 Agent ID" },
+      "status": {
+        "type": "string",
+        "enum": ["DONE", "PARTIAL_DONE", "BLOCKED", "FAILED"],
+        "description": "执行结果状态"
+      },
+      "risk_level": {
+        "type": "string",
+        "enum": ["low", "medium", "high"],
+        "description": "变更风险等级"
+      },
+      "completed": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "已完成事项列表"
+      },
+      "pending": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "待完成事项列表"
+      },
+      "blockers": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "阻塞项列表"
+      },
+      "artifacts": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "生成的工件路径列表"
+      },
+      "next_action": {
+        "type": "string",
+        "description": "建议的下一步操作"
+      },
+      "handoff_to": {
+        "type": "string",
+        "description": "交接目标 Agent ID"
+      },
+      "error": {
+        "type": "object",
+        "properties": {
+          "error_code": { "type": "string" },
+          "status_code": { "type": "integer" },
+          "summary": { "type": "string" },
+          "recoverable": { "type": "boolean" },
+          "retry_after_sec": { "type": "integer" },
+          "recommended_action": { "type": "string" }
+        },
+        "description": "错误信息（仅在失败时提供）"
+      }
+    },
+    "required": ["task_id", "agent", "status", "completed"]
+  },
+
+  "execution_flow": {
+    "steps": [
+      {
+        "step": 1,
+        "action": "读取任务输入包",
+        "description": "从 tasks/queue/ 或 tasks/active/ 读取任务定义"
+      },
+      {
+        "step": 2,
+        "action": "加载上下文快照",
+        "description": "根据 context_version 读取对应的上下文快照"
+      },
+      {
+        "step": 3,
+        "action": "申请文件锁",
+        "description": "对 scope 中的路径申请 FILE_LOCK 或 MODULE_LOCK"
+      },
+      {
+        "step": 4,
+        "action": "输出执行计划",
+        "description": "输出简要执行计划，包含角色、任务、目标、锁范围、依赖、步骤"
+      },
+      {
+        "step": 5,
+        "action": "执行任务",
+        "description": "按计划执行代码变更，遵循上下文裁剪策略（L1/L2/L3/L4）"
+      },
+      {
+        "step": 6,
+        "action": "运行质量门禁",
+        "description": "执行关联测试，确保不破坏现有功能"
+      },
+      {
+        "step": 7,
+        "action": "释放文件锁",
+        "description": "任务完成后释放所有持有的锁"
+      },
+      {
+        "step": 8,
+        "action": "输出任务结果",
+        "description": "按 output_format 输出结构化结果"
+      },
+      {
+        "step": 9,
+        "action": "落盘工件",
+        "description": "将测试结果、评估报告等工件写入 artifacts/ 目录"
+      },
+      {
+        "step": 10,
+        "action": "发起交接或完成",
+        "description": "如有下游依赖则发起 HANDOFF_REQUEST，否则标记 DONE"
+      }
+    ]
+  },
+
+  "error_handling": {
+    "retry_strategy": {
+      "max_retries": 4,
+      "intervals_sec": [30, 120, 300],
+      "after_max": "转入失败转移或人工评审"
+    },
+    "special_rules": [
+      {
+        "error_type": "SECURITY_DENIED",
+        "auto_retry": false,
+        "action": "立即上报 orch 并触发安全评审"
+      },
+      {
+        "error_type": "CONTRACT_MISMATCH",
+        "max_auto_retry": 1,
+        "action": "先由上游 Agent 输出契约变更摘要，再重试"
+      },
+      {
+        "error_type": "LOCK_CONFLICT",
+        "max_auto_retry": 3,
+        "action": "等待锁释放后重试"
+      },
+      {
+        "error_type": "TIMEOUT",
+        "action": "必须附加阶段性快照后再重试"
+      }
+    ],
+    "fallback_chain": [
+      "同角色备用 Agent",
+      "邻接角色协助 Agent",
+      "orch 降级接管",
+      "人工评审"
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "schema_version": "2.0",
+  "template_id": "task_template_spec",
+  "extends": "task_template_base",
+  "template_name": "需求澄清 Agent 任务模板",
+  "description": "spec Agent 专用模板，用于将自然语言目标转化为结构化可执行任务",
+
+  "agent": "spec",
+  "default_timeout_minutes": 45,
+
+  "input_parameters": {
+    "type": "object",
+    "properties": {
+      "raw_requirement": { "type": "string", "description": "原始需求描述" },
+      "historical_constraints": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "历史约束条件"
+      },
+      "stakeholders": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "相关干系人 Agent ID 列表"
+      }
+    },
+    "required": ["raw_requirement"]
+  },
+
+  "output_format": {
+    "type": "object",
+    "properties": {
+      "task_id": { "type": "string" },
+      "agent": { "type": "string" },
+      "status": { "type": "string", "enum": ["DONE", "PARTIAL_DONE", "BLOCKED", "FAILED"] },
+      "clarified_requirements": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "description": { "type": "string" },
+            "priority": { "type": "string", "enum": ["MUST", "SHOULD", "COULD"] },
+            "acceptance_criteria": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "generated_tasks": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "task_id": { "type": "string" },
+            "owner": { "type": "string" },
+            "goal": { "type": "string" },
+            "scope": { "type": "array", "items": { "type": "string" } },
+            "dependencies": { "type": "array", "items": { "type": "string" } },
+            "acceptance": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      },
+      "unresolved_questions": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "artifacts": { "type": "array", "items": { "type": "string" } },
+      "next_action": { "type": "string" },
+      "handoff_to": { "type": "string" }
+    },
+    "required": ["task_id", "agent", "status", "clarified_requirements", "generated_tasks"]
+  },
+
+  "execution_flow": {
+    "steps": [
+      { "step": 1, "action": "解析原始需求", "description": "将自然语言需求拆解为结构化条目" },
+      { "step": 2, "action": "识别约束与依赖", "description": "分析历史约束、技术限制和外部依赖" },
+      { "step": 3, "action": "生成验收条件", "description": "为每个需求条目定义可验证的验收条件" },
+      { "step": 4, "action": "拆分为可执行任务", "description": "按 Agent 分工将需求映射为具体任务" },
+      { "step": 5, "action": "输出任务图", "description": "生成包含依赖关系的任务 DAG" }
+    ]
+  },
+
+  "error_handling": {
+    "retry_strategy": { "max_retries": 2, "intervals_sec": [30, 120] },
+    "common_errors": [
+      { "error_type": "INSUFFICIENT_INFO", "action": "标记未解决问题并请求 orch 补充" },
+      { "error_type": "CONFLICTING_REQUIREMENTS", "action": "输出冲突分析并请求 arch 仲裁" }
+    ]
+  }
+}

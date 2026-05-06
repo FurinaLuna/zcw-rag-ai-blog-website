@@ -1,0 +1,66 @@
+{
+  "schema_version": "2.0",
+  "template_id": "task_template_doc",
+  "extends": "task_template_base",
+  "template_name": "文档 Agent 任务模板",
+  "description": "doc Agent 专用模板，用于 README、开发文档、运行说明和发布说明的编写与更新",
+
+  "agent": "doc",
+  "default_timeout_minutes": 15,
+
+  "allowed_paths": [
+    "docs/",
+    "README.md"
+  ],
+
+  "input_parameters": {
+    "type": "object",
+    "properties": {
+      "doc_requirement": { "type": "string", "description": "文档需求描述" },
+      "change_summary": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "需要记录的变更摘要"
+      },
+      "target_docs": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "目标文档路径列表"
+      }
+    },
+    "required": ["doc_requirement"]
+  },
+
+  "output_format": {
+    "type": "object",
+    "properties": {
+      "task_id": { "type": "string" },
+      "agent": { "type": "string" },
+      "status": { "type": "string", "enum": ["DONE", "PARTIAL_DONE", "BLOCKED", "FAILED"] },
+      "modified_files": { "type": "array", "items": { "type": "string" } },
+      "completed": { "type": "array", "items": { "type": "string" } },
+      "pending": { "type": "array", "items": { "type": "string" } },
+      "blockers": { "type": "array", "items": { "type": "string" } },
+      "artifacts": { "type": "array", "items": { "type": "string" } },
+      "next_action": { "type": "string" },
+      "handoff_to": { "type": "string" }
+    },
+    "required": ["task_id", "agent", "status", "completed", "modified_files"]
+  },
+
+  "execution_flow": {
+    "steps": [
+      { "step": 1, "action": "读取变更说明", "description": "了解需要记录的代码变更和功能更新" },
+      { "step": 2, "action": "更新相关文档", "description": "按需更新 README、开发文档、API 文档等" },
+      { "step": 3, "action": "补充发布说明", "description": "如有发布需求，编写变更日志和发布说明" },
+      { "step": 4, "action": "格式检查", "description": "确保文档格式一致、链接有效" }
+    ]
+  },
+
+  "error_handling": {
+    "retry_strategy": { "max_retries": 1, "intervals_sec": [30] },
+    "common_errors": [
+      { "error_type": "STALE_REFERENCE", "action": "检查引用的代码路径和接口是否已变更" }
+    ]
+  }
+}

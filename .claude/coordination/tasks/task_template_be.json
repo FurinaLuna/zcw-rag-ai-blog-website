@@ -1,0 +1,100 @@
+{
+  "schema_version": "2.0",
+  "template_id": "task_template_be",
+  "extends": "task_template_base",
+  "template_name": "后端 API Agent 任务模板",
+  "description": "be Agent 专用模板，用于 FastAPI Router、Service、Schema、依赖和中间件开发",
+
+  "agent": "be",
+  "default_timeout_minutes": 45,
+
+  "allowed_paths": [
+    "backend/app/routers/",
+    "backend/app/services/",
+    "backend/app/schemas/",
+    "backend/app/dependencies/",
+    "backend/app/middleware/",
+    "backend/tests/"
+  ],
+
+  "forbidden_paths": [
+    "backend/app/models/",
+    "backend/alembic/",
+    "frontend/"
+  ],
+
+  "input_parameters": {
+    "type": "object",
+    "properties": {
+      "api_requirement": { "type": "string", "description": "接口需求描述" },
+      "data_contract": {
+        "type": "object",
+        "description": "数据契约，包含请求/响应 Schema 定义"
+      },
+      "auth_required": {
+        "type": "boolean",
+        "description": "是否需要鉴权"
+      },
+      "rate_limit": {
+        "type": "string",
+        "description": "限流策略"
+      }
+    },
+    "required": ["api_requirement"]
+  },
+
+  "output_format": {
+    "type": "object",
+    "properties": {
+      "task_id": { "type": "string" },
+      "agent": { "type": "string" },
+      "status": { "type": "string", "enum": ["DONE", "PARTIAL_DONE", "BLOCKED", "FAILED"] },
+      "risk_level": { "type": "string", "enum": ["low", "medium", "high"] },
+      "modified_files": { "type": "array", "items": { "type": "string" } },
+      "api_changes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "endpoint": { "type": "string" },
+            "method": { "type": "string" },
+            "change_summary": { "type": "string" }
+          }
+        }
+      },
+      "completed": { "type": "array", "items": { "type": "string" } },
+      "pending": { "type": "array", "items": { "type": "string" } },
+      "blockers": { "type": "array", "items": { "type": "string" } },
+      "test_results": {
+        "type": "object",
+        "properties": {
+          "unit_tests_passed": { "type": "boolean" },
+          "integration_tests_passed": { "type": "boolean" }
+        }
+      },
+      "artifacts": { "type": "array", "items": { "type": "string" } },
+      "next_action": { "type": "string" },
+      "handoff_to": { "type": "string" }
+    },
+    "required": ["task_id", "agent", "status", "completed", "modified_files", "api_changes"]
+  },
+
+  "execution_flow": {
+    "steps": [
+      { "step": 1, "action": "对齐数据契约", "description": "确认 Schema 定义与前端消费需求一致" },
+      { "step": 2, "action": "实现 Router 和 Service", "description": "按需求实现接口逻辑" },
+      { "step": 3, "action": "补充鉴权和限流", "description": "按需添加认证、权限和限流中间件" },
+      { "step": 4, "action": "统一响应结构", "description": "确保响应格式与统一响应规范一致" },
+      { "step": 5, "action": "补充后端测试", "description": "编写 API 测试和业务逻辑测试" },
+      { "step": 6, "action": "输出接口变更说明", "description": "记录接口变更摘要供前端和文档参考" }
+    ]
+  },
+
+  "error_handling": {
+    "retry_strategy": { "max_retries": 3, "intervals_sec": [30, 120, 300] },
+    "common_errors": [
+      { "error_type": "SCHEMA_CONFLICT", "action": "与 fe 对齐字段定义后重试" },
+      { "error_type": "MIGRATION_NEEDED", "action": "标记需要 db Agent 介入" }
+    ]
+  }
+}

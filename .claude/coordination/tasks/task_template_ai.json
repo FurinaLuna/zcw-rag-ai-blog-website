@@ -1,0 +1,91 @@
+{
+  "schema_version": "2.0",
+  "template_id": "task_template_ai",
+  "extends": "task_template_base",
+  "template_name": "AI/RAG Agent 任务模板",
+  "description": "ai Agent 专用模板，用于 RAG 清洗、切片、向量化、检索、生成和评估",
+
+  "agent": "ai",
+  "default_timeout_minutes": 120,
+
+  "allowed_paths": [
+    "backend/app/services/rag/",
+    "backend/app/routers/rag.py"
+  ],
+
+  "forbidden_paths": [
+    "frontend/",
+    "backend/app/models/",
+    "backend/alembic/"
+  ],
+
+  "input_parameters": {
+    "type": "object",
+    "properties": {
+      "rag_requirement": { "type": "string", "description": "RAG 功能需求描述" },
+      "model_config": {
+        "type": "object",
+        "properties": {
+          "embedding_model": { "type": "string" },
+          "chat_model": { "type": "string" },
+          "similarity_threshold": { "type": "number" },
+          "top_k": { "type": "integer" }
+        },
+        "description": "模型配置参数"
+      },
+      "evaluation_criteria": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "评估标准列表"
+      }
+    },
+    "required": ["rag_requirement"]
+  },
+
+  "output_format": {
+    "type": "object",
+    "properties": {
+      "task_id": { "type": "string" },
+      "agent": { "type": "string" },
+      "status": { "type": "string", "enum": ["DONE", "PARTIAL_DONE", "BLOCKED", "FAILED"] },
+      "risk_level": { "type": "string", "enum": ["low", "medium", "high"] },
+      "modified_files": { "type": "array", "items": { "type": "string" } },
+      "completed": { "type": "array", "items": { "type": "string" } },
+      "pending": { "type": "array", "items": { "type": "string" } },
+      "blockers": { "type": "array", "items": { "type": "string" } },
+      "evaluation_report": {
+        "type": "object",
+        "properties": {
+          "recall_rate": { "type": "number" },
+          "precision": { "type": "number" },
+          "answer_consistency": { "type": "string" },
+          "no_hit_behavior": { "type": "string" }
+        }
+      },
+      "artifacts": { "type": "array", "items": { "type": "string" } },
+      "next_action": { "type": "string" },
+      "handoff_to": { "type": "string" }
+    },
+    "required": ["task_id", "agent", "status", "completed", "modified_files", "evaluation_report"]
+  },
+
+  "execution_flow": {
+    "steps": [
+      { "step": 1, "action": "分析 RAG 链路", "description": "检查清洗、切片、向量化、检索、生成全链路" },
+      { "step": 2, "action": "实现/优化链路环节", "description": "按需求调整 RAG 各环节逻辑" },
+      { "step": 3, "action": "调整模型参数", "description": "优化相似度阈值、TopK 等关键参数" },
+      { "step": 4, "action": "验证回答质量", "description": "检查生成答案与引用来源的一致性" },
+      { "step": 5, "action": "补充评估报告", "description": "输出包含召回率、精确率等指标的评估报告" },
+      { "step": 6, "action": "处理边界情况", "description": "确保无命中场景有兜底逻辑" }
+    ]
+  },
+
+  "error_handling": {
+    "retry_strategy": { "max_retries": 2, "intervals_sec": [60, 300] },
+    "common_errors": [
+      { "error_type": "EMBEDDING_FAILURE", "action": "检查 Embedding 模型连接和配置" },
+      { "error_type": "RETRIEVAL_QUALITY_LOW", "action": "调整切片策略或相似度阈值后重试" },
+      { "error_type": "ANSWER_INCONSISTENT", "action": "检查生成提示词和引用来源逻辑" }
+    ]
+  }
+}

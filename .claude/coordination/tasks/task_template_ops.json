@@ -1,0 +1,93 @@
+{
+  "schema_version": "2.0",
+  "template_id": "task_template_ops",
+  "extends": "task_template_base",
+  "template_name": "运维 Agent 任务模板",
+  "description": "ops Agent 专用模板，用于 Docker、环境变量、部署、性能监控和可观测性",
+
+  "agent": "ops",
+  "default_timeout_minutes": 60,
+
+  "allowed_paths": [
+    "docker-compose.yml",
+    "backend/Dockerfile",
+    "frontend/Dockerfile",
+    "backend/.env.example",
+    "frontend/.env.example"
+  ],
+
+  "input_parameters": {
+    "type": "object",
+    "properties": {
+      "deployment_requirement": { "type": "string", "description": "部署需求描述" },
+      "environment_changes": {
+        "type": "object",
+        "description": "环境变量变更说明"
+      },
+      "performance_targets": {
+        "type": "object",
+        "properties": {
+          "response_time_ms": { "type": "integer" },
+          "throughput_rps": { "type": "integer" },
+          "memory_limit_mb": { "type": "integer" }
+        },
+        "description": "性能目标"
+      }
+    },
+    "required": ["deployment_requirement"]
+  },
+
+  "output_format": {
+    "type": "object",
+    "properties": {
+      "task_id": { "type": "string" },
+      "agent": { "type": "string" },
+      "status": { "type": "string", "enum": ["DONE", "PARTIAL_DONE", "BLOCKED", "FAILED"] },
+      "risk_level": { "type": "string", "enum": ["low", "medium", "high"] },
+      "modified_files": { "type": "array", "items": { "type": "string" } },
+      "completed": { "type": "array", "items": { "type": "string" } },
+      "pending": { "type": "array", "items": { "type": "string" } },
+      "blockers": { "type": "array", "items": { "type": "string" } },
+      "deployment_plan": {
+        "type": "object",
+        "properties": {
+          "steps": { "type": "array", "items": { "type": "string" } },
+          "rollback_steps": { "type": "array", "items": { "type": "string" } },
+          "estimated_downtime": { "type": "string" }
+        }
+      },
+      "performance_report": {
+        "type": "object",
+        "properties": {
+          "response_time_ms": { "type": "number" },
+          "throughput_rps": { "type": "number" },
+          "memory_usage_mb": { "type": "number" },
+          "bottlenecks": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "artifacts": { "type": "array", "items": { "type": "string" } },
+      "next_action": { "type": "string" },
+      "handoff_to": { "type": "string" }
+    },
+    "required": ["task_id", "agent", "status", "completed", "modified_files"]
+  },
+
+  "execution_flow": {
+    "steps": [
+      { "step": 1, "action": "检查运行环境", "description": "确认 Docker、Node、Python 等依赖可用" },
+      { "step": 2, "action": "更新部署配置", "description": "修改 Dockerfile、Compose、环境变量" },
+      { "step": 3, "action": "验证构建", "description": "确保 Docker 构建和启动正常" },
+      { "step": 4, "action": "性能基准测试", "description": "执行性能测试并记录基线" },
+      { "step": 5, "action": "输出部署方案", "description": "包含部署步骤、回滚步骤和预估停机时间" }
+    ]
+  },
+
+  "error_handling": {
+    "retry_strategy": { "max_retries": 3, "intervals_sec": [30, 120, 300] },
+    "common_errors": [
+      { "error_type": "BUILD_FAILURE", "action": "检查 Dockerfile 和依赖版本" },
+      { "error_type": "PORT_CONFLICT", "action": "检查端口占用并调整映射" },
+      { "error_type": "ENV_MISCONFIG", "action": "检查环境变量模板和实际值" }
+    ]
+  }
+}

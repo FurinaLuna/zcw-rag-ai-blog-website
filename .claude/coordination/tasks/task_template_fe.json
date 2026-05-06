@@ -1,0 +1,92 @@
+{
+  "schema_version": "2.0",
+  "template_id": "task_template_fe",
+  "extends": "task_template_base",
+  "template_name": "前端 Agent 任务模板",
+  "description": "fe Agent 专用模板，用于 Nuxt 前端页面、组件、状态和样式开发",
+
+  "agent": "fe",
+  "default_timeout_minutes": 45,
+
+  "allowed_paths": [
+    "frontend/pages/",
+    "frontend/components/",
+    "frontend/composables/",
+    "frontend/stores/",
+    "frontend/styles/",
+    "frontend/tests/",
+    "frontend/e2e/"
+  ],
+
+  "forbidden_paths": [
+    "backend/",
+    "backend/app/models/",
+    "backend/alembic/"
+  ],
+
+  "input_parameters": {
+    "type": "object",
+    "properties": {
+      "page_requirement": { "type": "string", "description": "页面或组件需求描述" },
+      "api_contract": {
+        "type": "object",
+        "description": "后端 API 契约，包含请求/响应字段定义"
+      },
+      "design_reference": {
+        "type": "string",
+        "description": "设计参考文件路径"
+      },
+      "target_files": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "目标文件路径列表"
+      }
+    },
+    "required": ["page_requirement"]
+  },
+
+  "output_format": {
+    "type": "object",
+    "properties": {
+      "task_id": { "type": "string" },
+      "agent": { "type": "string" },
+      "status": { "type": "string", "enum": ["DONE", "PARTIAL_DONE", "BLOCKED", "FAILED"] },
+      "risk_level": { "type": "string", "enum": ["low", "medium", "high"] },
+      "modified_files": { "type": "array", "items": { "type": "string" } },
+      "completed": { "type": "array", "items": { "type": "string" } },
+      "pending": { "type": "array", "items": { "type": "string" } },
+      "blockers": { "type": "array", "items": { "type": "string" } },
+      "test_results": {
+        "type": "object",
+        "properties": {
+          "unit_tests_passed": { "type": "boolean" },
+          "e2e_tests_passed": { "type": "boolean" },
+          "coverage_note": { "type": "string" }
+        }
+      },
+      "artifacts": { "type": "array", "items": { "type": "string" } },
+      "next_action": { "type": "string" },
+      "handoff_to": { "type": "string" }
+    },
+    "required": ["task_id", "agent", "status", "completed", "modified_files"]
+  },
+
+  "execution_flow": {
+    "steps": [
+      { "step": 1, "action": "对齐 API 契约", "description": "确认消费的后端字段与接口契约一致" },
+      { "step": 2, "action": "实现页面/组件", "description": "按需求实现 UI 组件，包含加载态、空态、错误态" },
+      { "step": 3, "action": "补充状态管理", "description": "在 stores/ 或 composables/ 中管理组件状态" },
+      { "step": 4, "action": "适配移动端", "description": "确保响应式布局在各断点下正常" },
+      { "step": 5, "action": "补充前端测试", "description": "编写组件测试或 E2E 测试" },
+      { "step": 6, "action": "运行质量门禁", "description": "执行 vitest 和 lint 检查" }
+    ]
+  },
+
+  "error_handling": {
+    "retry_strategy": { "max_retries": 3, "intervals_sec": [30, 120, 300] },
+    "common_errors": [
+      { "error_type": "CONTRACT_MISMATCH", "action": "请求 be 输出契约变更摘要后调整" },
+      { "error_type": "BUILD_FAILURE", "action": "检查 nuxt.config.ts 和依赖版本兼容性" }
+    ]
+  }
+}

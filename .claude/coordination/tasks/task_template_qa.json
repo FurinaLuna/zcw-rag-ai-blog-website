@@ -1,0 +1,102 @@
+{
+  "schema_version": "2.0",
+  "template_id": "task_template_qa",
+  "extends": "task_template_base",
+  "template_name": "测试 Agent 任务模板",
+  "description": "qa Agent 专用模板，用于单元测试、集成测试、E2E 测试和质量门禁验证",
+
+  "agent": "qa",
+  "default_timeout_minutes": 60,
+
+  "allowed_paths": [
+    "backend/tests/",
+    "frontend/tests/",
+    "frontend/e2e/"
+  ],
+
+  "input_parameters": {
+    "type": "object",
+    "properties": {
+      "test_scope": {
+        "type": "string",
+        "enum": ["unit", "integration", "e2e", "regression", "full"],
+        "description": "测试范围"
+      },
+      "candidate_patches": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "待验证的补丁文件路径列表"
+      },
+      "test_matrix": {
+        "type": "object",
+        "description": "测试矩阵配置"
+      }
+    },
+    "required": ["test_scope", "candidate_patches"]
+  },
+
+  "output_format": {
+    "type": "object",
+    "properties": {
+      "task_id": { "type": "string" },
+      "agent": { "type": "string" },
+      "status": { "type": "string", "enum": ["DONE", "PARTIAL_DONE", "BLOCKED", "FAILED"] },
+      "gate_result": {
+        "type": "string",
+        "enum": ["PASSED", "FAILED", "PARTIAL"],
+        "description": "质量门禁结果"
+      },
+      "test_summary": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "integer" },
+          "passed": { "type": "integer" },
+          "failed": { "type": "integer" },
+          "skipped": { "type": "integer" },
+          "duration_sec": { "type": "integer" }
+        }
+      },
+      "failed_tests": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "test_name": { "type": "string" },
+            "error_message": { "type": "string" },
+            "suggested_fix": { "type": "string" }
+          }
+        }
+      },
+      "regression_check": {
+        "type": "string",
+        "enum": ["NO_REGRESSION", "REGRESSION_DETECTED"],
+        "description": "回归检测结果"
+      },
+      "completed": { "type": "array", "items": { "type": "string" } },
+      "blockers": { "type": "array", "items": { "type": "string" } },
+      "artifacts": { "type": "array", "items": { "type": "string" } },
+      "next_action": { "type": "string" },
+      "handoff_to": { "type": "string" }
+    },
+    "required": ["task_id", "agent", "status", "gate_result", "test_summary"]
+  },
+
+  "execution_flow": {
+    "steps": [
+      { "step": 1, "action": "读取测试矩阵", "description": "根据测试范围确定需要执行的测试套件" },
+      { "step": 2, "action": "执行单元测试", "description": "运行 backend 和 frontend 单元测试" },
+      { "step": 3, "action": "执行集成测试", "description": "运行 API 集成测试" },
+      { "step": 4, "action": "执行 E2E 测试", "description": "运行 Playwright E2E 测试" },
+      { "step": 5, "action": "回归检测", "description": "对比基线判断是否存在回归" },
+      { "step": 6, "action": "输出质量门禁报告", "description": "汇总测试结果并给出门禁结论" }
+    ]
+  },
+
+  "error_handling": {
+    "retry_strategy": { "max_retries": 2, "intervals_sec": [30, 120] },
+    "common_errors": [
+      { "error_type": "TEST_ENV_UNAVAILABLE", "action": "检查测试数据库和依赖服务" },
+      { "error_type": "FLAKY_TEST", "action": "标记为不稳定测试并重试最多 2 次" }
+    ]
+  }
+}

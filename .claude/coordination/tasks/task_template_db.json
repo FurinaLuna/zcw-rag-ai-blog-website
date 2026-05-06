@@ -1,0 +1,83 @@
+{
+  "schema_version": "2.0",
+  "template_id": "task_template_db",
+  "extends": "task_template_base",
+  "template_name": "数据库 Agent 任务模板",
+  "description": "db Agent 专用模板，用于 SQLAlchemy 模型、Alembic 迁移、索引和数据兼容性管理",
+
+  "agent": "db",
+  "default_timeout_minutes": 120,
+
+  "allowed_paths": [
+    "backend/app/models/",
+    "backend/alembic/versions/",
+    "backend/alembic/env.py"
+  ],
+
+  "forbidden_paths": [
+    "frontend/",
+    "backend/app/routers/",
+    "backend/app/services/"
+  ],
+
+  "input_parameters": {
+    "type": "object",
+    "properties": {
+      "model_requirement": { "type": "string", "description": "模型变更需求描述" },
+      "migration_type": {
+        "type": "string",
+        "enum": ["CREATE", "ALTER", "DROP", "INDEX", "DATA_MIGRATION"],
+        "description": "迁移类型"
+      },
+      "backward_compatible": {
+        "type": "boolean",
+        "description": "是否向后兼容"
+      },
+      "existing_data_impact": {
+        "type": "string",
+        "description": "对现有数据的影响评估"
+      }
+    },
+    "required": ["model_requirement", "migration_type"]
+  },
+
+  "output_format": {
+    "type": "object",
+    "properties": {
+      "task_id": { "type": "string" },
+      "agent": { "type": "string" },
+      "status": { "type": "string", "enum": ["DONE", "PARTIAL_DONE", "BLOCKED", "FAILED"] },
+      "risk_level": { "type": "string", "enum": ["low", "medium", "high"] },
+      "modified_files": { "type": "array", "items": { "type": "string" } },
+      "migration_script": { "type": "string", "description": "生成的迁移脚本路径" },
+      "rollback_script": { "type": "string", "description": "回滚脚本路径" },
+      "completed": { "type": "array", "items": { "type": "string" } },
+      "pending": { "type": "array", "items": { "type": "string" } },
+      "blockers": { "type": "array", "items": { "type": "string" } },
+      "data_impact_note": { "type": "string", "description": "数据影响说明" },
+      "artifacts": { "type": "array", "items": { "type": "string" } },
+      "next_action": { "type": "string" },
+      "handoff_to": { "type": "string" }
+    },
+    "required": ["task_id", "agent", "status", "completed", "modified_files", "migration_script", "rollback_script"]
+  },
+
+  "execution_flow": {
+    "steps": [
+      { "step": 1, "action": "评估数据影响", "description": "分析变更对现有数据和关联模型的影响" },
+      { "step": 2, "action": "更新模型定义", "description": "修改 SQLAlchemy 模型文件" },
+      { "step": 3, "action": "生成迁移脚本", "description": "使用 Alembic 生成可执行迁移脚本" },
+      { "step": 4, "action": "生成回滚脚本", "description": "确保迁移可回滚" },
+      { "step": 5, "action": "验证迁移", "description": "确认迁移脚本可执行、可回滚" },
+      { "step": 6, "action": "输出数据兼容性说明", "description": "记录历史数据兼容性和修复方案" }
+    ]
+  },
+
+  "error_handling": {
+    "retry_strategy": { "max_retries": 2, "intervals_sec": [60, 300] },
+    "common_errors": [
+      { "error_type": "MIGRATION_CONFLICT", "action": "检查迁移版本链是否线性" },
+      { "error_type": "DATA_LOSS_RISK", "action": "标记高风险并请求 arch 评审" }
+    ]
+  }
+}

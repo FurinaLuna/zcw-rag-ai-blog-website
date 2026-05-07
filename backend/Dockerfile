@@ -1,18 +1,13 @@
-FROM python:3.12-slim AS build
+FROM python:3.12-slim
 
 WORKDIR /app
 
 RUN pip install --no-cache-dir uv
 
 COPY pyproject.toml .
-RUN uv pip compile pyproject.toml -o requirements.txt && uv pip install --system -r requirements.txt
-
-FROM python:3.12-slim
-
-WORKDIR /app
-
-COPY --from=build /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=build /usr/local/bin /usr/local/bin
+RUN uv pip compile pyproject.toml -o requirements.txt \
+    && uv pip install --system --no-cache-dir -r requirements.txt \
+    && rm requirements.txt
 
 COPY . .
 

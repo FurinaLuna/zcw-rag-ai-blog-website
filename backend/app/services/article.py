@@ -82,7 +82,7 @@ async def get_articles(
 async def get_article_by_slug(db: AsyncSession, slug: str) -> Article | None:
     result = await db.execute(
         select(Article)
-        .options(joinedload(Article.category), selectinload(Article.tags))
+        .options(joinedload(Article.category), selectinload(Article.tags), selectinload(Article.comments))
         .where(Article.slug == slug)
     )
     return result.unique().scalar_one_or_none()

@@ -64,16 +64,16 @@ describe("useApi", () => {
     const api = useApi();
     await api.get("/protected");
 
-    const headers = mockFetch.mock.calls[0][1].headers;
+    const headers = mockFetch.mock.calls[0]![1]!.headers;
     expect(headers).toBeDefined();
-    expect(headers.get("Authorization")).toBe("Bearer test-token-123");
+    expect(headers!.get("Authorization")).toBe("Bearer test-token-123");
   });
 
   it("does not inject token without auth", async () => {
     const { useApi } = await import("~/composables/useApi");
     const api = useApi();
     await api.get("/public");
-    expect(mockFetch.mock.calls[0][1].headers).toBeUndefined();
+    expect(mockFetch.mock.calls[0]![1]!.headers).toBeUndefined();
   });
 
   it("handles GET request failure", async () => {

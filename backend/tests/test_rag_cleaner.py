@@ -1,6 +1,5 @@
 """测试 RAG 文本清洗模块"""
 
-import pytest
 from app.services.rag.cleaner import clean_markdown
 
 

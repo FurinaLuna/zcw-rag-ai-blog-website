@@ -25,20 +25,78 @@ test.describe("前台核心流程", () => {
     await expect(btn).toBeVisible();
   });
 
+  test("问答页显示推荐问题并可点击", async ({ page }) => {
+    await page.goto("/ask");
+    // 推荐问题区域可见
+    const suggestions = page.locator("text=试试这些问题：");
+    await expect(suggestions).toBeVisible();
+    // 点击推荐问题填充到输入框
+    const firstSuggestion = page.locator(".flex.flex-wrap button").first();
+    if (await firstSuggestion.isVisible()) {
+      await firstSuggestion.click();
+      // 输入框应该被填充或直接触发问答
+      const hasInput = await page.locator('input[placeholder*="输入"]').isVisible().catch(() => false);
+      if (hasInput) {
+        const inputVal = await page.locator('input[placeholder*="输入"]').inputValue();
+        expect(inputVal.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  test("问答页空输入提交不崩溃", async ({ page }) => {
+    await page.goto("/ask");
+    // 不输入任何内容直接点提问按钮
+    const btn = page.locator('button:has-text("提问")');
+    if (await btn.isVisible()) {
+      await btn.click();
+    }
+    // 页面应保持稳定，h1仍在
+    await expect(page.locator("h1")).toContainText("智能问答");
+  });
+
   test("搜索页可以输入关键词", async ({ page }) => {
     await page.goto("/search");
     const input = page.locator('input[type="search"]');
     await expect(input).toBeVisible();
     await input.fill("Nuxt");
-    await page.locator('button:has-text("搜索")').click();
+    await page.locator('button[type="submit"]').click();
     // 后端起不来会展示空结果，但页面不应崩溃
     await expect(page.locator("text=未找到")).toBeVisible({ timeout: 10000 });
+  });
+
+  test("搜索页可切换到语义搜索模式", async ({ page }) => {
+    await page.goto("/search");
+    // 语义搜索切换按钮可见
+    const semanticBtn = page.locator('button:has-text("语义搜索")');
+    await expect(semanticBtn).toBeVisible();
+    await semanticBtn.click();
+    // 语义搜索提示文案可见
+    await expect(page.locator("text=语义搜索根据含义匹配")).toBeVisible();
+    // 搜索框仍然可用
+    const input = page.locator('input[type="search"]');
+    await expect(input).toBeVisible();
+    await input.fill("如何优化性能");
+    await page.locator('button[type="submit"]').click();
+    // 页面不应崩溃（后端down时会展示未找到）
+    await expect(page.locator("text=未找到")).toBeVisible({ timeout: 10000 });
+  });
+
+  test("搜索页显示分页控件", async ({ page }) => {
+    await page.goto("/search");
+    // 初始无结果时不显示分页
+    const pagination = page.locator('[aria-label="分页"]');
+    await expect(pagination).not.toBeVisible();
+    // 输入关键词搜索
+    await page.locator('input[type="search"]').fill("Nuxt");
+    await page.locator('button[type="submit"]').click();
+    // 无结果时仍不显示分页（totalPages <= 1）
+    await expect(pagination).not.toBeVisible({ timeout: 10000 });
   });
 
   test("关于页正常展示", async ({ page }) => {
     await page.goto("/about");
     await expect(page.locator("h1")).toContainText("关于");
-    await expect(page.locator("text=Nuxt3")).toBeVisible();
+    await expect(page.locator("text=Nuxt3").first()).toBeVisible();
   });
 
   test("专题列表页加载正常", async ({ page }) => {
@@ -51,8 +109,8 @@ test.describe("后台管理流程", () => {
   test("登录页加载正常", async ({ page }) => {
     await page.goto("/admin/login");
     await expect(page.locator("h1")).toContainText("登录");
-    const usernameInput = page.locator("#username");
-    const passwordInput = page.locator("#password");
+    const usernameInput = page.locator("input#username");
+    const passwordInput = page.locator("input#password");
     await expect(usernameInput).toBeVisible();
     await expect(passwordInput).toBeVisible();
 
@@ -70,8 +128,8 @@ test.describe("后台管理流程", () => {
 
   test("登录失败显示错误", async ({ page }) => {
     await page.goto("/admin/login");
-    await page.fill("#username", "wrong");
-    await page.fill("#password", "wrong");
+    await page.fill("input#username", "wrong");
+    await page.fill("input#password", "wrong");
     await page.locator('button[type="submit"]').click();
     await expect(page.locator("text=失败")).toBeVisible({ timeout: 10000 });
   });

@@ -108,3 +108,10 @@ class PaginatedResponse(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class SemanticSearchRequest(BaseModel):
+    q: str = Field(..., min_length=1, max_length=500)
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=20, ge=1, le=50)
+    threshold: float = Field(default=0.3, ge=0.0, le=1.0)

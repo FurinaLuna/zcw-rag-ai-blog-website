@@ -8,9 +8,6 @@ from app.schemas.article import (
     ArticleAdminResponse,
     ArticleCreate,
     ArticleUpdate,
-    PaginatedResponse,
-    SlugCheckRequest,
-    SlugCheckResponse,
 )
 from app.schemas.auth import AdminInfo, LoginRequest, TokenResponse
 from app.schemas.category import CategoryCreate, CategoryResponse, CategoryUpdate, SortOrderRequest
@@ -31,7 +28,6 @@ from app.services.category import (
     create_category,
     delete_category,
     get_categories,
-    get_category_by_id,
     update_category,
     update_sort_orders,
 )

@@ -1,4 +1,11 @@
 import { vi } from "vitest";
+import { computed, ref, watch, onMounted, onUnmounted } from "vue";
+
+vi.stubGlobal("computed", computed);
+vi.stubGlobal("ref", ref);
+vi.stubGlobal("watch", watch);
+vi.stubGlobal("onMounted", onMounted);
+vi.stubGlobal("onUnmounted", onUnmounted);
 
 vi.stubGlobal("useRuntimeConfig", () => ({
   public: {

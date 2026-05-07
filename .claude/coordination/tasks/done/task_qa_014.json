@@ -1,0 +1,22 @@
+{
+  "task_id": "task_qa_014",
+  "title": "前端E2E测试扩充 — RAG问答流",
+  "owner": "qa",
+  "priority": "P2",
+  "goal": "在前端E2E测试中增加RAG问答页的完整交互流程测试：输入问题→点击提问→验证回答区域出现",
+  "scope": [
+    "frontend/e2e/core-flows.spec.ts"
+  ],
+  "constraints": [
+    "不破坏现有11个E2E测试",
+    "后端可能down，测试需处理该场景"
+  ],
+  "dependencies": [],
+  "acceptance": [
+    "新增RAG问答E2E测试",
+    "11+新测试全部通过"
+  ],
+  "context_version": "ctx_v20260507_01",
+  "status": "DONE",
+  "updated_at": "2026-05-07T19:58:26.732900+08:00"
+}

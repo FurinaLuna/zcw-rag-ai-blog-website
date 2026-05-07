@@ -1,22 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
-from app.schemas.article import ArticleDetailResponse, ArticleListResponse, PaginatedResponse, SlugCheckResponse
-from app.schemas.category import CategoryResponse
+from app.schemas.article import ArticleDetailResponse, ArticleListResponse, SemanticSearchRequest
 from app.schemas.comment import CommentCreate, CommentResponse
-from app.schemas.tag import TagResponse
 from app.services.article import (
     calculate_reading_time,
-    check_slug_available,
     get_article_by_slug,
     get_articles,
+    get_articles_by_ids,
     get_related_articles,
     increment_view_count,
 )
 from app.services.category import get_categories_with_count, get_category_by_slug
 from app.services.comment import create_comment, get_comments_by_article, like_comment
 from app.services.dashboard import get_home_data
+from app.services.rag.embedder import get_embedder
+from app.services.rag.retriever import retrieve_similar_chunks
 from app.services.tag import get_tags, get_tag_by_id
 from app.utils.response import success_response
 
@@ -240,6 +240,65 @@ async def search(
             "total": total,
             "page": page,
             "page_size": page_size,
+            "total_pages": total_pages,
+        }
+    )
+
+
+# Semantic search
+@router.post("/search/semantic")
+async def semantic_search(data: SemanticSearchRequest, db: AsyncSession = Depends(get_db)):
+    embedder = get_embedder()
+    query_embedding = embedder.encode_single(data.q)
+    if query_embedding is None:
+        raise HTTPException(status_code=503, detail="Embedding model not loaded")
+
+    chunks = await retrieve_similar_chunks(
+        db, query_embedding, top_k=50, threshold=data.threshold
+    )
+
+    seen: dict[int, dict] = {}
+    for c in chunks:
+        aid = c["article_id"]
+        if aid not in seen or c["similarity"] > seen[aid]["relevance"]:
+            seen[aid] = {
+                "article_id": aid,
+                "relevance": c["similarity"],
+                "snippet": c["content"][:200],
+            }
+
+    scored = sorted(seen.values(), key=lambda x: x["relevance"], reverse=True)
+    total = len(scored)
+    total_pages = max(1, (total + data.page_size - 1) // data.page_size)
+    start = (data.page - 1) * data.page_size
+    page_scores = scored[start : start + data.page_size]
+
+    article_ids = [s["article_id"] for s in page_scores]
+    articles = await get_articles_by_ids(db, article_ids)
+    article_map = {a.id: a for a in articles}
+
+    items = []
+    for s in page_scores:
+        a = article_map.get(s["article_id"])
+        if a is None:
+            continue
+        items.append({
+            **ArticleListResponse(
+                id=a.id, title=a.title, summary=a.summary, slug=a.slug,
+                cover_url=a.cover_url, category=a.category, tags=a.tags,
+                view_count=a.view_count, reading_time=calculate_reading_time(a.content_md),
+                published_at=a.published_at, created_at=a.created_at,
+            ).model_dump(),
+            "relevance": s["relevance"],
+            "snippet": s["snippet"],
+        })
+
+    return success_response(
+        data={
+            "items": items,
+            "total": total,
+            "page": data.page,
+            "page_size": data.page_size,
             "total_pages": total_pages,
         }
     )

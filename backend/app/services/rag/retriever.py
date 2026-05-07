@@ -2,7 +2,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
-from app.models.vector_chunk import VectorChunk
 
 
 async def retrieve_similar_chunks(

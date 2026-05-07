@@ -8,7 +8,6 @@ from sqlalchemy.orm import joinedload, selectinload
 from app.models.article import Article
 from app.models.article_tag import ArticleTag
 from app.models.category import Category
-from app.models.tag import Tag
 
 
 async def get_articles(
@@ -96,6 +95,21 @@ async def get_article_by_id(db: AsyncSession, article_id: int) -> Article | None
         .where(Article.id == article_id)
     )
     return result.unique().scalar_one_or_none()
+
+
+async def get_articles_by_ids(db: AsyncSession, ids: list[int]) -> list[Article]:
+    if not ids:
+        return []
+    stmt = (
+        select(Article)
+        .options(joinedload(Article.category), selectinload(Article.tags))
+        .where(Article.id.in_(ids), Article.status == "published")
+    )
+    result = await db.execute(stmt)
+    articles = list(result.unique().scalars().all())
+    id_order = {aid: i for i, aid in enumerate(ids)}
+    articles.sort(key=lambda a: id_order.get(a.id, 999))
+    return articles
 
 
 async def create_article(db: AsyncSession, data: dict) -> Article:

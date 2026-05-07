@@ -1,0 +1,28 @@
+{
+  "task_id": "task_doc_013",
+  "title": "文档版本同步与更新",
+  "owner": "doc",
+  "priority": "P2",
+  "goal": "更新CLAUDE.md、teammate.md、API规范、开发任务清单中的版本号和日期，同步当前项目实际状态（225 tests、语义搜索功能、5门禁全过）",
+  "scope": [
+    "CLAUDE.md",
+    "teammate.md",
+    "docs/backend/API接口规范-V1.0.md",
+    "docs/backend/后端开发任务清单.md",
+    "docs/frontend/前端开发任务清单.md"
+  ],
+  "constraints": [
+    "不修改协议和架构内容，只更新状态数据"
+  ],
+  "dependencies": [
+    "task_qa_012"
+  ],
+  "acceptance": [
+    "版本日期更新为2026-05-07",
+    "测试数据与实际一致",
+    "API接口列表包含语义搜索"
+  ],
+  "context_version": "ctx_v20260507_01",
+  "status": "DONE",
+  "updated_at": "2026-05-07T20:00:35.264605+08:00"
+}

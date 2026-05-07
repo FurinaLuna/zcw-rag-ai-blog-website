@@ -1,6 +1,5 @@
 """测试 RAG 文本清洗模块边缘情况 — 超长文本、特殊字符、混合语言等"""
 
-import pytest
 from app.services.rag.cleaner import clean_markdown
 
 

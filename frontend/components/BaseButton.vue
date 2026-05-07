@@ -1,5 +1,6 @@
 <template>
   <button
+    :type="type"
     :class="btnClass"
     :disabled="disabled || loading"
     :aria-label="ariaLabel"
@@ -16,12 +17,13 @@ const props = withDefaults(
   defineProps<{
     variant?: "primary" | "secondary" | "ghost" | "danger" | "icon";
     size?: "sm" | "md" | "lg" | "icon";
+    type?: "button" | "submit" | "reset";
     disabled?: boolean;
     loading?: boolean;
     ariaLabel?: string;
     block?: boolean;
   }>(),
-  { variant: "primary", size: "md", disabled: false, loading: false, block: false }
+  { variant: "primary", size: "md", type: "submit", disabled: false, loading: false, block: false }
 );
 
 const sizeH: Record<string, string> = { sm: "32px", md: "40px", lg: "48px", icon: "36px" };

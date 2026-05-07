@@ -1,7 +1,7 @@
 # teammate.md
 
-文档版本：V2.0  
-更新日期：2026-05-06  
+文档版本：V2.1  
+更新日期：2026-05-07  
 适用环境：Claude Code + DeepSeek 接入 + 多 Agent 协同开发  
 适用仓库：`zcw-rag-ai-blog-website`  
 文档定位：本文件是 Claude Code 多 Agent 协作的最高执行协议，优先级高于普通开发习惯。

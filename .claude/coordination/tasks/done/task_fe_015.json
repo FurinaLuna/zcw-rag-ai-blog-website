@@ -1,0 +1,25 @@
+{
+  "task_id": "task_fe_015",
+  "title": "useApi composable单元测试",
+  "owner": "fe",
+  "priority": "P2",
+  "goal": "为useApi composable编写vitest测试，覆盖GET/POST/PUT/DELETE方法、token注入、错误处理",
+  "scope": [
+    "frontend/tests/composables/useApi.test.ts"
+  ],
+  "constraints": [
+    "不破坏现有86个测试",
+    "使用vi.mock mock $fetch",
+    "不发起真实HTTP请求"
+  ],
+  "dependencies": [],
+  "acceptance": [
+    "测试GET/POST/PUT/DELETE方法",
+    "测试token自动注入",
+    "测试401错误处理",
+    "vitest全量通过"
+  ],
+  "context_version": "ctx_v20260507_01",
+  "status": "DONE",
+  "updated_at": "2026-05-07T20:06:43.770683+08:00"
+}

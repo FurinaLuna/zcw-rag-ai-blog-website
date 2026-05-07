@@ -67,7 +67,7 @@ def _generate_simple_answer(question: str, chunks: list[dict]) -> str:
     if not chunks:
         return "抱歉，站内知识库中暂未收录该问题的相关内容。"
 
-    lines = [f"根据站内知识库，为您找到以下相关信息：\n"]
+    lines = ["根据站内知识库，为您找到以下相关信息：\n"]
     for i, chunk in enumerate(chunks[:3]):
         lines.append(f"**来自《{chunk['article_title']}》**：")
         lines.append(f"> {chunk['content'][:200]}...")

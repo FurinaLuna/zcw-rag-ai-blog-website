@@ -5,7 +5,7 @@ WORKDIR /app
 RUN pip install --no-cache-dir uv
 
 COPY pyproject.toml .
-RUN uv pip install --system -r <(uv pip compile pyproject.toml -o -)
+RUN uv pip compile pyproject.toml -o requirements.txt && uv pip install --system -r requirements.txt
 
 FROM python:3.12-slim
 

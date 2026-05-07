@@ -1,0 +1,24 @@
+{
+  "task_id": "task_be_010",
+  "title": "Service层测试覆盖率提升到70%+",
+  "owner": "be",
+  "priority": "P1",
+  "goal": "补充tag/dashboard/comment/category服务层的mock集成测试，将后端覆盖率从65%提升至70%以上",
+  "scope": [
+    "backend/tests/test_services.py"
+  ],
+  "constraints": [
+    "不破坏现有测试",
+    "使用AsyncMock mock数据库",
+    "所有新增测试必须通过"
+  ],
+  "dependencies": [],
+  "acceptance": [
+    "tag服务测试覆盖CRUD",
+    "dashboard服务测试覆盖trends/hot_articles",
+    "pytest全量通过"
+  ],
+  "context_version": "ctx_v20260507_01",
+  "status": "DONE",
+  "updated_at": "2026-05-07T19:18:32.590901+08:00"
+}

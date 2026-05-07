@@ -21,6 +21,12 @@ interface PaginatedData<T> {
   total_pages: number
 }
 
+/** Semantic search result item */
+interface SemanticSearchItem extends ArticleListResponse {
+  relevance: number
+  snippet: string
+}
+
 // ---- Category Types ----
 
 interface CategorySimple {
@@ -96,6 +102,8 @@ interface ArticleListResponse {
   reading_time: number
   published_at: string | null
   created_at: string
+  relevance?: number
+  snippet?: string
 }
 
 interface ArticleDetailResponse {

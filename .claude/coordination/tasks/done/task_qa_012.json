@@ -1,0 +1,33 @@
+{
+  "task_id": "task_qa_012",
+  "title": "全量质量门禁最终校验",
+  "owner": "qa",
+  "priority": "P1",
+  "goal": "运行全部测试套件、lint、typecheck，确保所有5个质量门禁PASSED，更新current.json",
+  "scope": [
+    "backend/tests/",
+    "frontend/tests/",
+    "frontend/e2e/",
+    ".claude/coordination/context/current.json"
+  ],
+  "constraints": [
+    "所有测试必须通过",
+    "ruff必须clean",
+    "typecheck必须通过"
+  ],
+  "dependencies": [
+    "task_be_010",
+    "task_fe_011"
+  ],
+  "acceptance": [
+    "pytest 全绿",
+    "vitest 全绿",
+    "playwright 全绿",
+    "ruff clean",
+    "typecheck clean",
+    "5/5 quality gates PASSED"
+  ],
+  "context_version": "ctx_v20260507_01",
+  "status": "DONE",
+  "updated_at": "2026-05-07T19:56:22.978381+08:00"
+}

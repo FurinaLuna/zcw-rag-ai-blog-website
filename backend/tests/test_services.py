@@ -1,6 +1,6 @@
 """Service 层集成测试 — 用 mock AsyncSession 验证业务逻辑"""
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 
 class TestArticleService:
@@ -53,6 +53,29 @@ class TestCategoryService:
     """测试 category service 业务逻辑"""
 
     @pytest.mark.asyncio
+    async def test_get_category_by_slug_not_found(self):
+        from app.services.category import get_category_by_slug
+        db = AsyncMock()
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.scalar_one_or_none = MagicMock(return_value=None)
+        db.execute.return_value = exec_result
+        result = await get_category_by_slug(db, "nonexistent")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_update_category_not_found(self):
+        from app.services.category import update_category
+        from app.schemas.category import CategoryUpdate
+        db = AsyncMock()
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.scalar_one_or_none = MagicMock(return_value=None)
+        db.execute.return_value = exec_result
+        result = await update_category(db, 999, CategoryUpdate(name="new"))
+        assert result is None
+
+    @pytest.mark.asyncio
     async def test_delete_category_with_articles_returns_false(self):
         from app.services.category import delete_category
         db = AsyncMock()
@@ -87,6 +110,41 @@ class TestCategoryService:
 
 class TestCommentService:
     """测试 comment service 逻辑"""
+
+    @pytest.mark.asyncio
+    async def test_create_comment(self):
+        from app.services.comment import create_comment
+        db = AsyncMock()
+        db.add = MagicMock()
+        db.flush = AsyncMock()
+        db.refresh = AsyncMock()
+        result = await create_comment(db, 1, "nick", "content")
+        assert result is not None
+        assert result.nickname == "nick"
+        assert result.article_id == 1
+
+    @pytest.mark.asyncio
+    async def test_create_comment_with_parent(self):
+        from app.services.comment import create_comment
+        db = AsyncMock()
+        db.add = MagicMock()
+        db.flush = AsyncMock()
+        db.refresh = AsyncMock()
+        result = await create_comment(db, 1, "reply", "reply content", parent_id=5)
+        assert result.parent_id == 5
+
+    @pytest.mark.asyncio
+    async def test_get_comments_empty(self):
+        from app.services.comment import get_comments_by_article
+        db = AsyncMock()
+        db.scalar = AsyncMock(return_value=0)
+        exec_result = MagicMock()
+        exec_result.scalars = MagicMock(return_value=exec_result)
+        exec_result.all = MagicMock(return_value=[])
+        db.execute = AsyncMock(return_value=exec_result)
+        comments, total = await get_comments_by_article(db, 1)
+        assert comments == []
+        assert total == 0
 
     @pytest.mark.asyncio
     async def test_like_comment_not_found(self):
@@ -254,6 +312,145 @@ class TestArticleStatusTransitions:
         assert mock_article.status == "published"
         assert mock_article.published_at == original_published_at
         assert mock_article.vector_status == "pending"
+
+
+class TestTagService:
+    """测试 tag service"""
+
+    @pytest.mark.asyncio
+    async def test_get_tag_by_id_not_found(self):
+        from app.services.tag import get_tag_by_id
+        db = AsyncMock()
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.scalar_one_or_none = MagicMock(return_value=None)
+        db.execute.return_value = exec_result
+        result = await get_tag_by_id(db, 999)
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_create_tag(self):
+        from app.services.tag import create_tag
+        db = AsyncMock()
+        db.add = MagicMock()
+        db.flush = AsyncMock()
+        db.refresh = AsyncMock()
+        result = await create_tag(db, "新标签")
+        assert result is not None
+        assert result.name == "新标签"
+
+    @pytest.mark.asyncio
+    async def test_update_tag_not_found(self):
+        from app.services.tag import update_tag
+        db = AsyncMock()
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.scalar_one_or_none = MagicMock(return_value=None)
+        db.execute.return_value = exec_result
+        result = await update_tag(db, 999, "newname")
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_update_tag_success(self):
+        from app.services.tag import update_tag
+        db = AsyncMock()
+        mock_tag = MagicMock()
+        mock_tag.name = "oldname"
+        db.execute = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.scalar_one_or_none = MagicMock(return_value=mock_tag)
+        db.execute.return_value = exec_result
+        db.flush = AsyncMock()
+        db.refresh = AsyncMock()
+        result = await update_tag(db, 1, "newname")
+        assert result is not None
+        assert mock_tag.name == "newname"
+
+    @pytest.mark.asyncio
+    async def test_delete_tag_not_found(self):
+        from app.services.tag import delete_tag
+        db = AsyncMock()
+        delete_result = MagicMock()
+        delete_result.rowcount = 0
+        db.execute = AsyncMock(return_value=delete_result)
+        result = await delete_tag(db, 999)
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_delete_tag_success(self):
+        from app.services.tag import delete_tag
+        db = AsyncMock()
+        delete_result = MagicMock()
+        delete_result.rowcount = 1
+        db.execute = AsyncMock(return_value=delete_result)
+        result = await delete_tag(db, 1)
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_get_tags_returns_list(self):
+        from app.services.tag import get_tags
+        from app.models.tag import Tag
+        db = AsyncMock()
+        tag = Tag(name="tag1")
+        tag.id = 1
+        row = (tag, 3)
+        exec_result = MagicMock()
+        exec_result.all = MagicMock(return_value=[row])
+        db.execute = AsyncMock(return_value=exec_result)
+        result = await get_tags(db)
+        assert len(result) == 1
+        assert result[0]["article_count"] == 3
+
+
+class TestDashboardService:
+    """测试 dashboard service"""
+
+    @pytest.mark.asyncio
+    async def test_get_trends_empty(self):
+        from app.services.dashboard import get_trends
+        db = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.all = MagicMock(return_value=[])
+        db.execute = AsyncMock(return_value=exec_result)
+        result = await get_trends(db, days=7)
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_trends_with_data(self):
+        from app.services.dashboard import get_trends
+        from datetime import date
+        db = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.all = MagicMock(return_value=[(date(2026, 5, 6), 42)])
+        db.execute = AsyncMock(return_value=exec_result)
+        result = await get_trends(db, days=7)
+        assert len(result) == 1
+        assert result[0]["pv"] == 42
+
+    @pytest.mark.asyncio
+    async def test_get_hot_articles_empty(self):
+        from app.services.dashboard import get_hot_articles
+        db = AsyncMock()
+        exec_result = MagicMock()
+        exec_result.all = MagicMock(return_value=[])
+        db.execute = AsyncMock(return_value=exec_result)
+        result = await get_hot_articles(db, limit=5)
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_get_today_overview_no_data(self):
+        from app.services.dashboard import get_today_overview
+        db = AsyncMock()
+        db.scalar = AsyncMock(return_value=None)
+        db.execute = AsyncMock()
+        uv_result = MagicMock()
+        uv_result.scalar = MagicMock(return_value=None)
+        db.execute.return_value = uv_result
+        result = await get_today_overview(db)
+        assert result["pv"] == 0
+        assert result["uv"] == 0
+        assert result["rag_questions"] == 0
+        assert result["error_count"] == 0
 
 
 class TestAuthService:

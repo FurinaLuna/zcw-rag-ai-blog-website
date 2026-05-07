@@ -1,0 +1,27 @@
+{
+  "task_id": "task_fe_011",
+  "title": "前端组件测试补全 — MetricCard + DataTable + BackToTop",
+  "owner": "fe",
+  "priority": "P1",
+  "goal": "为MetricCard、DataTable、BackToTop三个组件补充vitest单元测试",
+  "scope": [
+    "frontend/tests/components/MetricCard.test.ts",
+    "frontend/tests/components/DataTable.test.ts",
+    "frontend/tests/components/BackToTop.test.ts"
+  ],
+  "constraints": [
+    "不破坏现有66个测试",
+    "使用@vue/test-utils mount",
+    "覆盖每种variant和边界状态"
+  ],
+  "dependencies": [],
+  "acceptance": [
+    "MetricCard测试不少于5个",
+    "DataTable测试覆盖loading/empty/error状态",
+    "BackToTop测试覆盖显示/隐藏/点击",
+    "vitest全量通过"
+  ],
+  "context_version": "ctx_v20260507_01",
+  "status": "DONE",
+  "updated_at": "2026-05-07T19:48:21.114389+08:00"
+}

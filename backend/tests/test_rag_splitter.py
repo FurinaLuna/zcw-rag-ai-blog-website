@@ -1,6 +1,5 @@
 """测试 RAG 文本切片模块"""
 
-import pytest
 from app.services.rag.splitter import split_text
 
 
